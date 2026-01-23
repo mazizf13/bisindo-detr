@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0" version="22.0.0">
+  <diagram id="design_system" name="Design System Penelitian">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="794" pageHeight="1123" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <!-- A4 margins: Left=4cm(113pt), Others=3cm(85pt) -->
+        
+        <!-- Title -->
+        <mxCell id="title" value="DESIGN SYSTEM PENELITIAN" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="200" y="95" width="510" height="30" as="geometry"/>
+        </mxCell>
+        
+        <!-- Subtitle -->
+        <mxCell id="subtitle" value="Sistem Deteksi Bahasa Isyarat BISINDO Menggunakan DETR" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="200" y="125" width="510" height="20" as="geometry"/>
+        </mxCell>
+        
+        <!-- LEFT COLUMN -->
+        
+        <!-- Step 1: Data Collection -->
+        <mxCell id="step1_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="113" y="170" width="220" height="85" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step1_title" value="1. PENGAMBILAN DATA" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="123" y="178" width="200" height="20" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step1_content" value="• Kamera laptop&#xa;• 1300 citra A-Z (26 kelas)&#xa;• 50 data per kelas" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="123" y="198" width="200" height="50" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 2: Annotation -->
+        <mxCell id="step2_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="113" y="280" width="220" height="75" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step2_title" value="2. ANOTASI DATA" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="123" y="288" width="200" height="20" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step2_content" value="• Label Studio&#xa;• Format: cx, cy, w, h (YOLO)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="123" y="308" width="200" height="40" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="step1_box" target="step2_box">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 3: Preprocessing -->
+        <mxCell id="step3_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="113" y="380" width="220" height="130" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step3_title" value="3. PRAPROSES &amp; AUGMENTASI&#xa;(On-the-fly Training)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="123" y="386" width="200" height="28" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step3_content" value="• Resize: 500×500&#xa;• *Random Crop: 224×224 (p=0.33)&#xa;• Final Resize: 224×224&#xa;• *Horizontal Flip (p=0.5)&#xa;• *Color Jitter (p=0.5)&#xa;• Normalize (ImageNet)&#xa;• ToTensorV2" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=8;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="123" y="416" width="200" height="88" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="step2_box" target="step3_box">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 4: Architecture -->
+        <mxCell id="step4_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="113" y="535" width="220" height="85" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step4_title" value="4. ARSITEKTUR DETR" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="123" y="543" width="200" height="20" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step4_content" value="• Backbone: ResNet-50&#xa;• Transformer Encoder-Decoder&#xa;• Prediction Heads" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="123" y="563" width="200" height="50" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="step3_box" target="step4_box">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Arrow to right column -->
+        <mxCell id="arrow_bridge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="step4_box" target="step5_box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="577"/>
+              <mxPoint x="360" y="212"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- RIGHT COLUMN -->
+        
+        <!-- Step 5: Training -->
+        <mxCell id="step5_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="393" y="170" width="220" height="100" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step5_title" value="5. PELATIHAN MODEL" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="403" y="178" width="200" height="20" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step5_content" value="• Optimizer: Adam&#xa;• Batch Size: 4&#xa;• Learning Rate: 1e-5&#xa;• Scheduler: CosineAnnealing&#xa;• Epochs: 1000" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=8;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="403" y="198" width="200" height="65" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 6: Evaluation -->
+        <mxCell id="step6_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#bac8d3;strokeColor=#23445d;" vertex="1" parent="1">
+          <mxGeometry x="393" y="295" width="220" height="85" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step6_title" value="6. EVALUASI MODEL" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="403" y="303" width="200" height="20" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step6_content" value="• Pycocotools, Confusion Matrix&#xa;• Precision, Recall, F1-Score&#xa;• Seleksi model terbaik" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="403" y="323" width="200" height="50" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="step5_box" target="step6_box">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 7: Implementation -->
+        <mxCell id="step7_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="393" y="405" width="220" height="75" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step7_title" value="7. IMPLEMENTASI MODEL" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="403" y="413" width="200" height="20" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="step7_content" value="• Deteksi citra statis (test set)&#xa;• Deteksi real-time (webcam)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="403" y="433" width="200" height="40" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="step6_box" target="step7_box">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="643" y="170" width="132" height="155" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="legend_title" value="KETERANGAN:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;fontStyle=1;fontColor=#000000;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="650" y="178" width="118" height="18" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="legend_content" value="■ Kuning = Data&#xa;■ Merah = Anotasi&#xa;■ Ungu = Praproses&#xa;■ Hijau = Arsitektur&#xa;■ Biru = Training&#xa;■ Abu = Evaluasi&#xa;■ Oranye = Deploy&#xa;&#xa;* = Training only" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=8;fontColor=#333333;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="650" y="198" width="118" height="120" as="geometry"/>
+        </mxCell>
+        
+        <!-- Note Box -->
+        <mxCell id="note_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;dashPattern=4 4;" vertex="1" parent="1">
+          <mxGeometry x="643" y="345" width="132" height="75" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="note_title" value="CATATAN:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;fontStyle=1;fontColor=#000000;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="650" y="352" width="118" height="16" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="note_content" value="Augmentasi dilakukan&#xa;on-the-fly (real-time)&#xa;selama training, bukan&#xa;pre-processing." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=7;fontColor=#333333;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="650" y="370" width="118" height="45" as="geometry"/>
+        </mxCell>
+        
+        <!-- Pipeline Flow Indicator -->
+        <mxCell id="flow_indicator" value="ALUR PIPELINE →" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=8;fontStyle=2;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="113" y="152" width="100" height="15" as="geometry"/>
+        </mxCell>
+        
+        <!-- Footer -->
+        <mxCell id="footer" value="Margin: Kiri 4cm, Lainnya 3cm | A4 (210×297mm)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=7;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="250" y="510" width="310" height="15" as="geometry"/>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

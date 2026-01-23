@@ -1,0 +1,230 @@
+<mxfile host="app.diagrams.net" modified="2024-01-01T00:00:00.000Z" agent="Mozilla/5.0" version="22.0.0" etag="xxx" type="device">
+  <diagram id="implementation" name="Implementation Pipeline">
+    <mxGraphModel dx="1600" dy="2000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="794" pageHeight="1123" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <!-- Page margins: Left=4cm(113pt), Others=3cm(85pt) -->
+        <!-- A4: 794x1123 pt, usable: 113+596+85=794, 85+953+85=1123 -->
+        
+        <!-- Title -->
+        <mxCell id="title" value="ALUR IMPLEMENTASI MODEL DETR" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="200" y="95" width="510" height="35" as="geometry"/>
+        </mxCell>
+        
+        <!-- Left Column Header: Test Static -->
+        <mxCell id="headerTest" value="IMPLEMENTASI CITRA STATIS&#xa;(test.py)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="123" y="145" width="270" height="50" as="geometry"/>
+        </mxCell>
+        
+        <!-- Right Column Header: Realtime -->
+        <mxCell id="headerRealtime" value="IMPLEMENTASI REAL-TIME&#xa;(realtime.py)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="423" y="145" width="270" height="50" as="geometry"/>
+        </mxCell>
+        
+        <!-- TEST COLUMN -->
+        
+        <!-- Step 1: Load Model -->
+        <mxCell id="test1" value="Muat Model Terbaik&#xa;(best_model.pt)&#xa;Mode: Evaluation" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="133" y="215" width="250" height="50" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="headerTest" target="test1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 2: Load Dataset -->
+        <mxCell id="test2" value="Muat Test Set&#xa;• 130 gambar&#xa;• Batch size: 4&#xa;• Tanpa Augmentasi" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="133" y="285" width="250" height="60" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="test1" target="test2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 3: Preprocessing -->
+        <mxCell id="test3" value="Preprocessing&#xa;• Resize: 224×224&#xa;• Normalize (ImageNet stats)&#xa;• ToTensor" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="133" y="365" width="250" height="60" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="test2" target="test3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 4: Inference -->
+        <mxCell id="test4" value="DETR Inference&#xa;Batch Processing (4 gambar)&#xa;Output: Logits + Bounding Boxes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=center;" vertex="1" parent="1">
+          <mxGeometry x="133" y="445" width="250" height="50" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="test3" target="test4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 5: Post-processing -->
+        <mxCell id="test5" value="Post-processing&#xa;• Softmax (logits → probabilitas)&#xa;• Confidence Threshold: 0.95&#xa;• Rescale BBox: 224×224" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="133" y="515" width="250" height="65" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="test4" target="test5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 6: Visualization -->
+        <mxCell id="test6" value="Visualisasi&#xa;• Plot Grid 2×2 (4 gambar)&#xa;• Gambar Bounding Box (3px)&#xa;• Tampilkan Kelas + Confidence&#xa;• Simpan: test_results.png" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="133" y="600" width="250" height="75" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="test5" target="test6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 7: Record Metrics -->
+        <mxCell id="test7" value="Catat Metrik Performa&#xa;• Waktu Inference (ms)&#xa;• Total Waktu / Batch" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=center;" vertex="1" parent="1">
+          <mxGeometry x="133" y="695" width="250" height="50" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="test6" target="test7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- REALTIME COLUMN -->
+        
+        <!-- Step 1: Load Model -->
+        <mxCell id="rt1" value="Muat Model Terbaik&#xa;(best_model.pt)&#xa;Mode: Evaluation" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="433" y="215" width="250" height="50" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowRt1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="headerRealtime" target="rt1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 2: Initialize Camera -->
+        <mxCell id="rt2" value="Inisialisasi Kamera&#xa;• cv2.VideoCapture(0) → Webcam&#xa;• LIVE STREAM dari kamera laptop&#xa;• Siapkan Color Mapping (26 kelas)&#xa;• Setup pipeline Preprocessing" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="433" y="285" width="250" height="75" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowRt2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="rt1" target="rt2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Loop Start Box -->
+        <mxCell id="loopBox" value="LOOP KONTINYU - LIVE CAMERA FEED (sampai tekan 'q')" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;fontStyle=1;align=center;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+          <mxGeometry x="423" y="375" width="270" height="35" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowLoop" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="rt2" target="loopBox">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 3: Capture Frame -->
+        <mxCell id="rt3" value="Tangkap Frame dari LIVE CAMERA&#xa;• cap.read() → Frame real-time&#xa;• Flip Horizontal (efek cermin)&#xa;• Langsung dari stream webcam" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="433" y="425" width="250" height="60" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowRt3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="loopBox" target="rt3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 4: Preprocessing -->
+        <mxCell id="rt4" value="Preprocessing (per frame)&#xa;• Resize: 224×224&#xa;• Normalize (ImageNet stats)&#xa;• ToTensor [1, 3, 224, 224]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="433" y="505" width="250" height="60" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowRt4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="rt3" target="rt4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 5: Inference -->
+        <mxCell id="rt5" value="DETR Inference (per frame)&#xa;• Tanpa temporal tracking&#xa;• Proses independen&#xa;• Catat waktu inference" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="433" y="585" width="250" height="60" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowRt5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="rt4" target="rt5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 6: Post-processing -->
+        <mxCell id="rt6" value="Post-processing&#xa;• Softmax (logits → probabilitas)&#xa;• Confidence Threshold: 0.8&#xa;• Rescale BBox dinamis (ukuran frame)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="433" y="665" width="250" height="65" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowRt6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="rt5" target="rt6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 7: Draw on Frame -->
+        <mxCell id="rt7" value="Gambar LIVE pada Frame Kamera&#xa;• BBox: Warna berbeda per kelas (26 warna)&#xa;• Label kelas (A-Z BISINDO)&#xa;• Skor confidence (0.0-1.0)&#xa;• Background box untuk teks" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="433" y="750" width="250" height="75" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowRt7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="rt6" target="rt7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 8: Display Frame -->
+        <mxCell id="rt8" value="Tampilkan LIVE ke Layar&#xa;• cv2.imshow() → Tampilkan feed kamera&#xa;• Rendering real-time&#xa;• Jendela video live dengan deteksi" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="433" y="845" width="250" height="60" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowRt8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="rt7" target="rt8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Step 9: Monitor FPS -->
+        <mxCell id="rt9" value="Monitor Performa (setiap 30 frames)&#xa;• Hitung FPS&#xa;• Log waktu inference&#xa;• Tampilkan jumlah deteksi" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="433" y="925" width="250" height="60" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowRt9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="rt8" target="rt9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Decision: Press q? -->
+        <mxCell id="decision" value="Tekan 'q'?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="473" y="960" width="170" height="70" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowRt10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="rt9" target="decision">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Loop Back -->
+        <mxCell id="arrowLoop2" value="TIDAK" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#d79b00;fontSize=9;fontStyle=1;" edge="1" parent="1" source="decision" target="rt3">
+          <mxGeometry x="-0.85" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="403" y="995"/>
+              <mxPoint x="403" y="455"/>
+            </Array>
+            <mxPoint as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Exit -->
+        <mxCell id="exit" value="Berhenti &amp; Lepas Resource&#xa;• cap.release()&#xa;• cv2.destroyAllWindows()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=center;" vertex="1" parent="1">
+          <mxGeometry x="458" y="1055" width="200" height="50" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="arrowExit" value="YA" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;endArrow=block;endFill=1;strokeColor=#d79b00;fontSize=9;fontStyle=1;" edge="1" parent="1" source="decision" target="exit">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend" value="LEGENDA:&#xa;■ Kuning = Model/Konfigurasi&#xa;■ Ungu = Loading Data&#xa;■ Merah = Processing&#xa;■ Hijau = Inference&#xa;■ Oranye = Loop Control" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;fontSize=9;fontColor=#333333;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="133" y="770" width="250" height="80" as="geometry"/>
+        </mxCell>
+        
+        <!-- Key Differences Box -->
+        <mxCell id="diff" value="PERBEDAAN UTAMA:&#xa;• Batch Size: Test = 4 | Realtime = 1&#xa;• Threshold: Test = 0.95 | Realtime = 0.8&#xa;• Proses: Test = Batch | Realtime = Per-frame&#xa;• Rescale: Test = Fixed (224×224) | Realtime = Dinamis&#xa;• Output: Test = Gambar tersimpan | Realtime = Tampilan live" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;fontSize=8;fontColor=#000000;spacingLeft=8;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="133" y="875" width="250" height="95" as="geometry"/>
+        </mxCell>
+        
+        <!-- Footer note -->
+        <mxCell id="footer" value="Margin: Kiri 4cm, Lainnya 3cm | Ukuran: A4 (210×297mm)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=7;fontColor=#666666;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="300" y="1095" width="310" height="15" as="geometry"/>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

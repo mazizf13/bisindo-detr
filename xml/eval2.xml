@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2025-12-08T00:00:00.000Z" agent="5.0 (XML export)">
+  <diagram name="DETR Flowchart" id="diagram-1">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="#ffffff">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- TRAINING PHASE container -->
+        <mxCell id="phase_training" value="FASE PELATIHAN (300 Epoch)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#E69138;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="980" height="280" as="geometry"/>
+        </mxCell>
+
+        <!-- Training input -->
+        <mxCell id="train_box_imgs" value="988 gambar&#10;+ Augmentasi On-the-fly&#10;(Batch 4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C6E0B4;strokeColor=#6AA84F;" vertex="1" parent="phase_training">
+          <mxGeometry x="30" y="40" width="140" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Training DETR -->
+        <mxCell id="train_box_detr" value="Pelatihan DETR&#10;(1 layer Enc/Dec)&#10;25 Query" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BDD7EE;strokeColor=#2F75B5;" vertex="1" parent="phase_training">
+          <mxGeometry x="200" y="40" width="160" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow 1 -->
+        <mxCell id="edge_t1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B6B6B;" edge="1" source="train_box_imgs" target="train_box_detr" parent="phase_training">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Continuous Monitoring Box -->
+        <mxCell id="train_box_continuous" value="PEMANTAUAN KONTINU&#10;Val Loss Setiap Epoch&#10;↓&#10;Simpan best_val_loss.pth" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=11;" vertex="1" parent="phase_training">
+          <mxGeometry x="400" y="40" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow 2 -->
+        <mxCell id="edge_t2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B6B6B;" edge="1" source="train_box_detr" target="train_box_continuous" parent="phase_training">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Periodic Evaluation Box -->
+        <mxCell id="train_box_periodic" value="EVALUASI PERIODIK&#10;COCO setiap 30 Epoch&#10;↓&#10;Simpan best_ap50.pth&#10;+ checkpoint_epoch_N.pth" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#BF9000;fontSize=11;" vertex="1" parent="phase_training">
+          <mxGeometry x="620" y="40" width="220" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow 3 -->
+        <mxCell id="edge_t3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6B6B6B;" edge="1" source="train_box_continuous" target="train_box_periodic" parent="phase_training">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Checkpoint files note -->
+        <mxCell id="train_checkpoints" value="Output Checkpoint:&#10;• best_val_loss.pth (val_loss terendah)&#10;• best_ap50.pth (AP50 tertinggi)&#10;• checkpoint_epoch_{30,60,90,...,300}.pth" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;align=left;" vertex="1" parent="phase_training">
+          <mxGeometry x="30" y="150" width="380" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Training details note -->
+        <mxCell id="train_details" value="Dataset: 988 gambar (Train)&#10;Augmentasi: ON (Random Crop, Flip, ColorJitter)&#10;Optimizer: AdamW (lr=1e-4, wd=1e-4)&#10;Scheduler: CosineAnnealingWarmRestarts (T₀=30)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#D9EAD3;strokeColor=#38761D;fontSize=11;align=left;" vertex="1" parent="phase_training">
+          <mxGeometry x="450" y="150" width="390" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow leaving training -->
+        <mxCell id="edge_training_to_selection" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=2;" edge="1" source="phase_training" target="phase_selection" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- MODEL SELECTION PHASE container -->
+        <mxCell id="phase_selection" value="FASE PEMILIHAN MODEL (Validation Set)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F8FF;strokeColor=#2B8FB3;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="340" width="980" height="220" as="geometry"/>
+        </mxCell>
+
+        <!-- Load candidates -->
+        <mxCell id="sel_load" value="Muat 2 Kandidat:&#10;1. best_val_loss.pth&#10;2. best_ap50.pth" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D9EAD3;strokeColor=#38761D;" vertex="1" parent="phase_selection">
+          <mxGeometry x="40" y="40" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Evaluate both -->
+        <mxCell id="sel_eval" value="Evaluasi Kedua Model pada&#10;Validation Set&#10;(PyCOCOtools)&#10;AP50, AP75, AP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#BF9000;" vertex="1" parent="phase_selection">
+          <mxGeometry x="260" y="40" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Select best -->
+        <mxCell id="sel_select" value="Pilih Model dengan&#10;AP50 Tertinggi&#10;↓&#10;Model Final" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D0E0E3;strokeColor=#0B5394;fontStyle=1;" vertex="1" parent="phase_selection">
+          <mxGeometry x="480" y="40" width="160" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrows -->
+        <mxCell id="edge_sel_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6B6B6B;" edge="1" source="sel_load" target="sel_eval" parent="phase_selection">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_sel_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6B6B6B;" edge="1" source="sel_eval" target="sel_select" parent="phase_selection">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Selection details -->
+        <mxCell id="sel_info" value="Dataset: 182 gambar (Validation)&#10;Tanpa Augmentasi&#10;Metrik: AP50 (utama), AP75, AP@[0.5:0.95]&#10;Output: Model Terbaik (misal best_ap50.pth dengan AP50=0.89)" style="text;whiteSpace=wrap;html=1;fontSize=11;align=left;" vertex="1" parent="phase_selection">
+          <mxGeometry x="680" y="40" width="260" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow down to final evaluation -->
+        <mxCell id="edge_selection_to_final" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#000000;strokeWidth=2;" edge="1" source="phase_selection" target="phase_final" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- FINAL EVALUATION PHASE container -->
+        <mxCell id="phase_final" value="FASE EVALUASI AKHIR (Test Set)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E6FF;strokeColor=#7A1FA2;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="590" width="980" height="260" as="geometry"/>
+        </mxCell>
+
+        <!-- Best Model -->
+        <mxCell id="final_best" value="Model Final&#10;(Terpilih)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DDEBF7;strokeColor=#1F4E79;fontStyle=1;" vertex="1" parent="phase_final">
+          <mxGeometry x="40" y="40" width="160" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- PyCOCOtools block -->
+        <mxCell id="final_coco" value="PyCOCOtools&#10;• AP50&#10;• AP75&#10;• AP@[0.5:0.95]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6E6;strokeColor=#B30000;" vertex="1" parent="phase_final">
+          <mxGeometry x="240" y="40" width="180" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_final_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6B6B6B;" edge="1" source="final_best" target="final_coco" parent="phase_final">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Predictions.json -->
+        <mxCell id="final_preds" value="test_predictions.json" style="shape=process;whiteSpace=wrap;html=1;fillColor=#E2F0D9;strokeColor=#0B6B0B;" vertex="1" parent="phase_final">
+          <mxGeometry x="460" y="40" width="160" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_final_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6B6B6B;" edge="1" source="final_coco" target="final_preds" parent="phase_final">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Confusion matrix -->
+        <mxCell id="final_conf" value="Confusion Matrix&#10;(IoU ≥ 0.5)&#10;• Precision per kelas&#10;• Recall per kelas&#10;• F1-Score per kelas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#7F6000;" vertex="1" parent="phase_final">
+          <mxGeometry x="660" y="30" width="220" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_final_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6B6B6B;" edge="1" source="final_preds" target="final_conf" parent="phase_final">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Dataset and output text in final phase -->
+        <mxCell id="final_info" value="Dataset: 130 gambar (Test - Data yang Belum Pernah Dilihat)&#10;Tanpa Augmentasi&#10;Output: Metrik Performa Akhir (LAPORAN Skripsi)&#10;• Metrik COCO (AP50, AP75, AP)&#10;• Precision, Recall, F1-Score per kelas&#10;• Visualisasi Confusion Matrix" style="text;whiteSpace=wrap;html=1;fontSize=11;align=left;" vertex="1" parent="phase_final">
+          <mxGeometry x="40" y="140" width="640" height="100" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
