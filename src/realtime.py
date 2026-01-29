@@ -45,9 +45,9 @@ model.eval()
 try:
     # 2. LOAD PRETRAINED
     # model.load_pretrained('pretrained/warnet/rabu/blacknoaug/300_model.pt', map_location=device)
-    model.load_pretrained('pretrained/warnet2/noaug/300_model.pt', map_location=device)
+    # model.load_pretrained('pretrained/warnet2/noaug/300_model.pt', map_location=device)
     # model.load_pretrained('pretrained/warnet2/aug/200_model.pt', map_location=device)
-    # model.load_pretrained('pretrained/warnet2/aug-new/200_model.pt', map_location=device)
+    model.load_pretrained('pretrained/warnet2/aug-new/300_model.pt', map_location=device)
     # model.load_pretrained('pretrained/warnet/gpu_black_300_model.pt', map_location=device)
     try:
         logger.success("Model loaded successfully!")
