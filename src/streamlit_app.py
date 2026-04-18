@@ -27,7 +27,7 @@ st.set_page_config(
 )
 
 # -------------------------
-# Custom CSS Styling - ELEGANT MIDNIGHT BLUE THEME
+# Custom CSS
 # -------------------------
 def load_css():
     st.markdown("""
@@ -430,7 +430,7 @@ def main():
         st.markdown("""
         <div class="info-card">
             <h3>🔍 Cara Kerja</h3>
-            <p>Aplikasi ini menggunakan <b>DETR (Detection Transformer)</b>, 
+            <p>Aplikasi ini menggunakan model <b>DETR (Detection Transformer)</b>, 
             arsitektur deep learning modern yang menggabungkan CNN dan 
             Transformer untuk deteksi objek end-to-end.</p>
         </div>
