@@ -503,14 +503,14 @@ def main():
             col1, col2 = st.columns(2)
             
             with col1:
-                st.markdown("#### 📥 Gambar Input")
+                st.markdown("#### 📥 Hasil Deteksi")
                 st.image(
                     cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB),
                     use_container_width=True
                 )
             
             with col2:
-                st.markdown("#### 🎯 Hasil Deteksi")
+                st.markdown("#### 🎯 Flip Hasil Deteksi")
                 st.image(
                     cv2.cvtColor(result['frame'], cv2.COLOR_BGR2RGB),
                     use_container_width=True
@@ -590,14 +590,14 @@ def main():
             col1, col2 = st.columns(2)
             
             with col1:
-                st.markdown("#### 📥 Gambar Input")
+                st.markdown("#### 📥 Hasil Deteksi")
                 st.image(
                     cv2.cvtColor(frame, cv2.COLOR_BGR2RGB),
                     use_container_width=True
                 )
             
             with col2:
-                st.markdown("#### 🎯 Hasil Deteksi")
+                st.markdown("#### 🎯 Flip Hasil Deteksi")
                 st.image(
                     cv2.cvtColor(result['frame'], cv2.COLOR_BGR2RGB),
                     use_container_width=True
