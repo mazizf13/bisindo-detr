@@ -1,16 +1,21 @@
+import contextlib
+
+from scipy import io
 import torch
 import cv2
 import os
 import json
 import numpy as np
 import torchvision.transforms as T
+import contextlib
+import io
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 from model import DETR
 
 # MODEL_PATH = "pretrained/warnet2/noaug/300_model.pt"
-# MODEL_PATH = "pretrained/warnet2/aug/300_model.pt"
-MODEL_PATH = "pretrained/warnet2/aug-new/200_model.pt"
+MODEL_PATH = "pretrained/warnet2/aug/300_model.pt"
+# MODEL_PATH = "pretrained/warnet2/aug-new/300_model.pt"
 
 GT_JSON_PATH = "data/asli/test/result.json"
 
@@ -41,7 +46,7 @@ def main():
 
     coco_gt = COCO(GT_JSON_PATH)
     img_ids = coco_gt.getImgIds()
-    print(f"📸 Total Gambar yang akan dites: {len(img_ids)}")
+    print(f"📸 Total citra yang akan dites: {len(img_ids)}")
 
     results_list = []
 
@@ -49,16 +54,16 @@ def main():
     
     with torch.no_grad():
         for idx, img_id in enumerate(img_ids):
-            # A. Load Info Gambar dari JSON
+            # Load Info  dari JSON
             img_info = coco_gt.loadImgs(img_id)[0]
             file_name = os.path.basename(img_info['file_name'])
             
-            # B. Buka Gambar Asli
+            # Open GT
             img_path = os.path.join(IMAGE_ROOT, file_name)
             original_img = cv2.imread(img_path)
             
             if original_img is None:
-                print(f"⚠️ Gagal baca gambar: {img_path}")
+                print(f"⚠️ Gagal baca citra: {img_path}")
                 continue
 
             img_rgb = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
@@ -109,10 +114,10 @@ def main():
                 print(f"   Proses {idx}/{len(img_ids)} gambar...")
 
     if len(results_list) == 0:
-        print("❌ Tidak ada deteksi sama sekali! Cek model atau preprocessing.")
+        print("Tidak ada deteksi sama sekali! Cek model atau preprocessing.")
         return
 
-    pred_json_path = "evaluation_result/black_gpu_temp_predictions.json"
+    pred_json_path = "evaluation_result/testtttt.json"
     with open(pred_json_path, "w") as f:
         json.dump(results_list, f)
     
@@ -124,13 +129,34 @@ def main():
     coco_eval = COCOeval(coco_gt, coco_dt, 'bbox')
     coco_eval.evaluate()
     coco_eval.accumulate()
-    coco_eval.summarize()
+    
+    with contextlib.redirect_stdout(io.StringIO()):
+        coco_eval.summarize()
 
-    print("\n🎉 SELESAI! Lihat tabel di atas.")
-    print("Baris 'AP @ IoU=0.50' adalah nilai yang kamu cari buat Skripsi.")
+    # Ambil metric yang dibutuhkan
+    ap = coco_eval.stats[0]
+    ap50 = coco_eval.stats[1]
+    ap75 = coco_eval.stats[2]
+    # ar1 = coco_eval.stats[6] #noaug
+    ar1 = coco_eval.stats[7] #aug
+
+    print("\n=== HASIL EVALUASI PYCOCOTOOLS SKENARIO 1 TANPA AUGMENTASI ===")
+    print(f"AP  @[IoU=0.50:0.95] : {ap:.3f}")
+    print(f"AP50@[IoU=0.50]      : {ap50:.3f}")
+    print(f"AP75@[IoU=0.75]      : {ap75:.3f}")
+    print(f"AR1 @[maxDets=1]     : {ar1:.3f}")
+
+    print("SELESAI!")
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
 
 
 # EVAL DATA OOD

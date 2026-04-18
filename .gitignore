@@ -20,6 +20,10 @@ logs
 predict
 pretrained
 evaluation_result
+dataset_bbox_visualization
+debug_onthefly
+debug_samples
+test_predictions
 
 ._*
 .Spotlight-V100

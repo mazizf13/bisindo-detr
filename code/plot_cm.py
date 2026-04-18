@@ -6,10 +6,10 @@ from pycocotools.coco import COCO
 from sklearn.metrics import confusion_matrix
 
 # === CONFIG ===
-GT_JSON = "data/test_coco_result.json"
-PRED_JSON = "data/temp_predict_eval.json"
-CONF_THRESHOLD = 0.5
-IOU_THRESHOLD = 0.5
+GT_JSON = "data/asli/test/result.json"
+PRED_JSON = "evaluation_result/110226_augnew.json"
+CONF_THRESHOLD = 0.7
+IOU_THRESHOLD = 0.75
 CLASSES = [
     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
     "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"

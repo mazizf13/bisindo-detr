@@ -50,7 +50,7 @@ def main():
         T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) 
     ])
     
-    img_tensor = preprocess(img_rgb).unsqueeze(0).to(DEVICE)
+    img_tensor = preprocess(img_rgb).unsqueeze(0).to(DEVICE) # type: ignore
 
     # 4. Prediksi
     print(f"🔍 Menganalisis {TARGET_FILE}...")

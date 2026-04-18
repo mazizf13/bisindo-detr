@@ -3,8 +3,8 @@ import numpy as np
 from pycocotools.coco import COCO
 
 # === CONFIG ===
-GT_JSON = "data/test_coco_result.json"
-PRED_JSON = "data/temp_predictions.json" # Pastikan path ini benar! (kadang ada di folder data/)
+GT_JSON = "data/asli/test/result.json"
+PRED_JSON = "evaluation_result/110226_augnew.json"
 CLASSES = [
     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
     "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"

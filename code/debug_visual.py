@@ -17,9 +17,9 @@ except ImportError:
     from model import DETR
 
 # === CONFIG ===
-MODEL_PATH = "pretrained/999_model.pt"
-GT_JSON_PATH = "data/temp_predict_eval.json"
-IMAGE_ROOT = "data/test_ood/images"
+MODEL_PATH = "pretrained/warnet2/aug-new/300_model.pt"
+GT_JSON_PATH = "data/asli/test/result.json"
+IMAGE_ROOT = "data/asli/test/images"
 NUM_CLASSES = 26
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -114,7 +114,7 @@ def main():
 
         # C. PREDIKSI MODEL (MERAH)
         img_rgb_input = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_tensor = preprocess(img_rgb_input).unsqueeze(0).to(DEVICE)
+        img_tensor = preprocess(img_rgb_input).unsqueeze(0).to(DEVICE) # type: ignore
 
         with torch.no_grad():
             outputs = model(img_tensor)

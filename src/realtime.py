@@ -46,7 +46,7 @@ try:
     # 2. LOAD PRETRAINED
     # model.load_pretrained('pretrained/warnet/rabu/blacknoaug/300_model.pt', map_location=device)
     # model.load_pretrained('pretrained/warnet2/noaug/300_model.pt', map_location=device)
-    # model.load_pretrained('pretrained/warnet2/aug/200_model.pt', map_location=device)
+    # model.load_pretrained('pretrained/warnet2/aug/300_model.pt', map_location=device)
     model.load_pretrained('pretrained/warnet2/aug-new/300_model.pt', map_location=device)
     # model.load_pretrained('pretrained/warnet/gpu_black_300_model.pt', map_location=device)
     try:
@@ -68,11 +68,12 @@ if not cap.isOpened():
 
 # Initialize performance tracking
 frame_count = 0
+dropout_frames = 0
 fps_start_time = time.time()
 session_start_time = time.time()
-fps_display = 0.0 
+fps_display = 0.0
 
-# --- FIX 2: WRAP DENGAN TORCH.NO_GRAD() ---
+# --- WRAP WITH TORCH.NO_GRAD() ---
 try:
     with torch.no_grad():
         while cap.isOpened():
@@ -103,25 +104,19 @@ try:
             
             # keep_mask = max_probs > 0.7
             # query_indices = keep_mask.nonzero(as_tuple=True)[0]
-            # --- BAGIAN YANG DIUBAH (Top-1 Only) ---
-            # 1. Cari 1 score tertinggi dan index-nya dari 100 queries
             top_score, top_idx = max_probs.max(0) 
             
-            # 2. Set threshold rendah (misal 0.1) biar box tetap muncul walau confidence turun,
-            # tapi tidak muncul kalau gelap total/noise parah.
+            # 2. Set threshold
             if top_score > 0.7:
-                # .unsqueeze(0) penting biar formatnya jadi list [index], bukan angka tunggal
-                # jadi kode di bawahnya (for loop) tetap jalan normal.
                 query_indices = top_idx.unsqueeze(0)
             else:
                 query_indices = []
-            # --- SELESAI UBAH ---
 
-            # Siapkan list detections untuk Logger & Drawing
+            # list detections untuk Logger & Drawing
             current_detections = []
 
             if len(query_indices) > 0:
-                # Ambil boxes, detach, pindah cpu
+                # Ambil boxes
                 pred_boxes = result['pred_boxes'][0, query_indices].detach().cpu()
                 keep_classes = max_classes[query_indices].detach().cpu()
                 keep_probs = max_probs[query_indices].detach().cpu()
@@ -130,7 +125,7 @@ try:
                 bboxes = rescale_bboxes(pred_boxes, (width, height))
 
                 for bclass, bprob, bbox in zip(keep_classes, keep_probs, bboxes):
-                    # Convert ke numpy aman karena sudah detach().cpu()
+
                     bclass_idx = int(bclass.numpy())
                     bprob_val = float(bprob.numpy())
                     x1, y1, x2, y2 = map(int, bbox.numpy())
@@ -138,19 +133,21 @@ try:
                     if bclass_idx >= len(CLASSES):
                         continue
 
-                    # Logger Terminal
                     current_detections.append({
                         'class': CLASSES[bclass_idx],
                         'confidence': bprob_val,
                         'bbox': [x1, y1, x2, y2]
                     })
 
-                    # Draw bounding box di layar
                     cv2.rectangle(frame, (x1, y1), (x2, y2), COLORS[bclass_idx], 3) # type: ignore
 
-                    # Label text
                     frame_text = f"{CLASSES[bclass_idx]} - {bprob_val:.2f}"
-                    (text_w, text_h), baseline = cv2.getTextSize(frame_text, cv2.FONT_HERSHEY_DUPLEX, 1.2, 2)
+                    (text_w, text_h), baseline = cv2.getTextSize(
+                        frame_text,
+                        cv2.FONT_HERSHEY_DUPLEX,
+                        1.2,
+                        2
+                    )
 
                     cv2.rectangle(
                         frame,
@@ -170,6 +167,10 @@ try:
                         2,
                         cv2.LINE_AA
                     )
+
+            else:
+                # Tidak ada deteksi → dihitung sebagai dropout
+                dropout_frames += 1
 
             # LOGGING TERMINAL
             frame_count += 1
@@ -212,6 +213,8 @@ except KeyboardInterrupt:
 total_session_time = time.time() - session_start_time
 final_avg_fps = frame_count / total_session_time if total_session_time > 0 else 0
 
+dropout_rate = (dropout_frames / frame_count) * 100 if frame_count > 0 else 0
+
 cap.release()
 cv2.destroyAllWindows()
 
@@ -219,8 +222,10 @@ cv2.destroyAllWindows()
 print("\n" + "="*40)
 print(f"✅ Session Ended Successfully")
 print(f"📊 Total Frames: {frame_count}")
+print(f"❌ Dropout Frames: {dropout_frames}")
+print(f"📉 Dropout Rate: {dropout_rate:.2f}%")
 print(f"⏱️ Total Duration: {total_session_time:.2f}s")
-print(f"🚀 FINAL AVERAGE FPS: {final_avg_fps:.2f}") 
+print(f"🚀 FINAL AVERAGE FPS: {final_avg_fps:.2f}")
 print(f"💻 Hardware Used: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
 print("="*40 + "\n")
 

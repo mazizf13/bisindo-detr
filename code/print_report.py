@@ -5,8 +5,8 @@ from pycocotools.coco import COCO
 from sklearn.metrics import classification_report
 
 # === CONFIG ===
-GT_JSON = "data/test_coco_result.json"
-PRED_JSON = "data/temp_predict_eval.json"
+GT_JSON = "data/asli/test/result.json"
+PRED_JSON = "data/asli/test/predictions.json"
 CONF_THRESHOLD = 0.5
 IOU_THRESHOLD = 0.5
 OUTPUT_CSV = "laporan_klasifikasi_final.csv" # Nama file output
@@ -54,7 +54,7 @@ def main():
         
         for gt in gt_anns:
             if gt['category_id'] not in cat_id_to_index: continue
-            gt_idx = cat_id_to_index[gt['category_id']]x
+            gt_idx = cat_id_to_index[gt['category_id']]
             
             best_iou = 0
             best_pred_idx = -1
@@ -100,8 +100,7 @@ def main():
     
     # Simpan
     df.to_csv(OUTPUT_CSV)
-    print(f"\n✅ Laporan tersimpan di file: {OUTPUT_CSV}")
-    print("   (Bisa langsung dibuka di Excel)")
+    print(f"Laporan tersimpan di file: {OUTPUT_CSV}")
 
 if __name__ == "__main__":
     main()

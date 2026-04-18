@@ -8,8 +8,8 @@ from sklearn.metrics import confusion_matrix
 # === CONFIG ===
 GT_JSON = "data/test_coco_result.json"       # Kunci Jawaban (Ground Truth)
 PRED_JSON = "data/tempp_predictions.json"     # Hasil Prediksi Model
-CONF_THRESHOLD = 0.25                        # Threshold confidence score (bisa disesuaikan)
-IOU_THRESHOLD = 0.1                         # Threshold IoU untuk dianggap "match"
+CONF_THRESHOLD = 0.5                        # Threshold confidence score (bisa disesuaikan)
+IOU_THRESHOLD = 0.5                        # Threshold IoU untuk dianggap "match"
 CLASSES = [
     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
     "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"

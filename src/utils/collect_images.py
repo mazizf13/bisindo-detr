@@ -99,5 +99,5 @@ class CaptureImages():
         logger.info("Camera released and windows closed")
 
 if __name__ == '__main__': 
-    cap = CaptureImages('./data/black', classes, 0)
-    cap.run(num_images=60, sleep_time=2.0)
+    cap = CaptureImages('./data/collect_images/apr', classes, 0)
+    cap.run(num_images=50, sleep_time=2.0)

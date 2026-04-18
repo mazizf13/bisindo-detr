@@ -1,234 +1,559 @@
-import os
-import sys
 import torch
 import numpy as np
-from torch.utils.data import Dataset, DataLoader
-from PIL import Image
+from torch.utils.data import DataLoader, Dataset 
+import os 
+from PIL import Image 
 import albumentations as A
-from albumentations.pytorch import ToTensorV2
-from colorama import Fore
-from matplotlib import pyplot as plt
-
+import numpy as np
+from colorama import Fore 
+from matplotlib import pyplot as plt 
 from utils.boxes import rescale_bboxes, stacker
 from utils.setup import get_classes
 from utils.logger import get_logger
 from utils.rich_handlers import DataLoaderHandler
-from matplotlib.patches import Rectangle
+import sys 
 
 
-class DETRData(Dataset):
+class DETRData(Dataset): 
     def __init__(self, path, train=True):
         super().__init__()
         self.path = path
-        self.labels_path = os.path.join(self.path, "labels")
-        self.images_path = os.path.join(self.path, "images")
+        self.labels_path = os.path.join(self.path, 'labels')
+        self.images_path = os.path.join(self.path, 'images')
+        self.label_files = os.listdir(self.labels_path) 
+        self.labels = list(filter(lambda x: x.endswith('.txt'), self.label_files))
         self.train = train
-
-        self.labels = [x for x in os.listdir(self.labels_path) if x.endswith(".txt")]
-
-        # logger
+        
+        # Initialize logger
         self.logger = get_logger("data_loader")
         self.data_handler = DataLoaderHandler()
-
+        
+        # Log dataset initialization
         dataset_info = {
             "Dataset Path": self.path,
             "Mode": "Training" if train else "Testing",
             "Total Samples": len(self.labels),
             "Images Path": self.images_path,
-            "Labels Path": self.labels_path,
+            "Labels Path": self.labels_path
         }
         self.data_handler.log_dataset_stats(dataset_info)
-
+        
+        # Log transforms information
         transform_list = [
             "Resize to 500x500",
-            "Random Crop 224x224 (training only)",
+            "Random Safe Crop 224x224 (training only)",
             "Final Resize to 224x224",
             "Horizontal Flip p=0.5 (training only)",
             "Color Jitter (training only)",
             "Normalize (ImageNet stats)",
-            "Convert to Tensor",
+            "Convert to Tensor"
         ]
-        self.data_handler.log_transform_info(transform_list)
-
-        train_transforms = [
-            A.Resize(500, 500),
-            A.RandomSizedBBoxSafeCrop(
-                height=224,
-                width=224,
-                erosion_rate=0.0,
-                p=0.33,
-            ),
-            A.Resize(224, 224),
-            A.HorizontalFlip(p=0.5),
-
-            A.OneOf(
-                [
-                    A.ColorJitter(
-                        brightness=0.1,
-                        contrast=0.1,
-                        saturation=0.15,
-                        hue=0.5,
-                        p=1.0,
-                    ),
-
-                    A.Compose([
-                        A.HueSaturationValue(
-                            hue_shift_limit=60,
-                            sat_shift_limit=40,
-                            val_shift_limit=15,
-                            p=1.0,
-                        ),
-                        A.RandomBrightnessContrast(
-                            brightness_limit=(-0.1, 0.25),
-                            contrast_limit=(-0.1, 0.25),
-                            p=1.0,
-                        ),
-                    ]),
-                ],
-                p=0.66,
-            ),
-
-            A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ToTensorV2(),
-        ]
-
-        test_transforms = [
-            A.Resize(500, 500),
-            A.Resize(224, 224),
-            A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ToTensorV2(),
-        ]
-
-        self.transform = A.Compose(
-            train_transforms if self.train else test_transforms,
-            bbox_params=A.BboxParams(format="yolo", label_fields=["class_labels"]),
-        )
-
-        # --- Build image map (basename -> filename) ---
-        self.image_map = {}
-        for img in os.listdir(self.images_path):
-            base = os.path.splitext(img)[0]
-            self.image_map[base] = img
-
-        # Debug mismatch
-        label_bases = set(os.path.splitext(x)[0] for x in self.labels)
-        image_bases = set(self.image_map.keys())
-        missing = sorted(label_bases - image_bases)
-        if len(missing) > 0:
-            print(
-                Fore.YELLOW
-                + f"⚠️ {len(missing)} label tidak punya pasangan image. Contoh: {missing[:5]}"
-                + Fore.RESET
-            )
+        self.data_handler.log_transform_info(transform_list)             
 
     def safe_transform(self, image, bboxes, labels, max_attempts=50):
-        for _ in range(max_attempts):
+        self.transform = A.Compose(
+            [   
+                A.Resize(500,500),
+                *([A.RandomSizedBBoxSafeCrop(width=224, height=224, p=0.33)] if self.train else []),
+                A.Resize(224,224),
+                *([A.HorizontalFlip(p=0.5)] if self.train else []),
+                *([A.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.5, hue=0.5, p=0.5)] if self.train else []),
+                A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                A.ToTensorV2()
+            ], bbox_params=A.BboxParams(format='yolo', label_fields=['class_labels'])
+        )
+        
+        for attempt in range(max_attempts):
             try:
-                transformed = self.transform(
-                    image=image, bboxes=bboxes, class_labels=labels
-                )
-                if len(transformed["bboxes"]) > 0:
+                transformed = self.transform(image=image, bboxes=bboxes, class_labels=labels)
+                if len(transformed['bboxes']) > 0:
                     return transformed
-            except Exception:
+            except:
                 continue
+        
+        return {'image': image, 'bboxes': bboxes, 'class_labels': labels}
 
-        return {"image": image, "bboxes": bboxes, "class_labels": labels}
+    def __len__(self): 
+        return len(self.labels) 
 
-    def __len__(self):
-        return len(self.labels)
-
-    def __getitem__(self, idx):
-        label_name = os.path.splitext(self.labels[idx])[0]
-        label_path = os.path.join(self.labels_path, self.labels[idx])
-
-        # exact match
-        if label_name not in self.image_map:
-            # fallback: cari yang mirip (Roboflow kadang beda suffix)
-            candidates = [k for k in self.image_map if k.startswith(label_name)]
-            if len(candidates) == 0:
-                raise RuntimeError(f"Label tanpa image: {label_name}")
-            label_name = candidates[0]
-
-        image_path = os.path.normpath(
-            os.path.join(self.images_path, self.image_map[label_name])
-        )
-
-        try:
-            img = Image.open(image_path).convert("RGB")
-        except Exception as e:
-            raise RuntimeError(f"Gagal baca gambar: {image_path}\n{e}")
-
-        with open(label_path, "r") as f:
+    def __getitem__(self, idx): 
+        self.label_path = os.path.join(self.labels_path, self.labels[idx]) 
+        self.image_name = self.labels[idx].split('.')[0]
+        self.image_path = os.path.join(self.images_path, f'{self.image_name}.jpg') 
+        
+        img = Image.open(self.image_path)
+        with open(self.label_path, 'r') as f: 
             annotations = f.readlines()
+        class_labels = []
+        bounding_boxes = []
+        for annotation in annotations: 
+            annotation = annotation.split('\n')[:-1][0].split(' ')
+            class_labels.append(annotation[0]) 
+            bounding_boxes.append(annotation[1:])
+        class_labels = np.array(class_labels).astype(int) 
+        bounding_boxes = np.array(bounding_boxes).astype(float) 
 
-        class_labels, bounding_boxes = [], []
-        for ann in annotations:
-            parts = ann.strip().split()
-            if len(parts) == 5:
-                class_labels.append(int(parts[0]))
-                bounding_boxes.append([float(x) for x in parts[1:]])
+        augmented = self.safe_transform(image=np.array(img), bboxes=bounding_boxes, labels=class_labels)
+        augmented_img_tensor = augmented['image']
+        augmented_bounding_boxes = np.array(augmented['bboxes'])
+        augmented_classes = augmented['class_labels']
 
-        class_labels = np.array(class_labels)
-        bounding_boxes = np.array(bounding_boxes)
+        labels = torch.tensor(augmented_classes, dtype=torch.long)  
+        boxes = torch.tensor(augmented_bounding_boxes, dtype=torch.float32)
+        return augmented_img_tensor, {'labels': labels, 'boxes': boxes}
 
-        augmented = self.safe_transform(
-            image=np.array(img),
-            bboxes=bounding_boxes,
-            labels=class_labels,
-        )
-
-        return augmented["image"], {
-            "labels": torch.tensor(augmented["class_labels"], dtype=torch.long),
-            "boxes": torch.tensor(
-                np.array(augmented["bboxes"]), dtype=torch.float32
-            ),
-        }
-
-
-if __name__ == "__main__":
-    # dataset = DETRData("data/lawas-test_ood", train=False)
-    dataset = DETRData("data/asli/train", train=True)
-    dataloader = DataLoader(
-        dataset, collate_fn=stacker, batch_size=16, drop_last=True
-    )
+if __name__ == '__main__':
+    dataset = DETRData('data/asli/train', train=True) 
+    dataloader = DataLoader(dataset, collate_fn=stacker, batch_size=4, drop_last=True)
 
     X, y = next(iter(dataloader))
-    print(Fore.LIGHTCYAN_EX + str(y) + Fore.RESET)
-
-    CLASSES = get_classes()
-    fig, ax = plt.subplots(4, 4)
+    print(Fore.LIGHTCYAN_EX + str(y) + Fore.RESET) 
+    CLASSES = get_classes() 
+    fig, ax = plt.subplots(2,2) 
     axs = ax.flatten()
-
-    for img, annotations, ax in zip(X, y, axs):
-        ax.imshow(img.permute(1, 2, 0))
-        box_classes = annotations["labels"]
-        boxes = rescale_bboxes(annotations["boxes"], (224, 224))
-
-        for box_class, bbox in zip(box_classes, boxes):
-            if box_class != 26:
+    for idx, (img, annotations, ax) in enumerate(zip(X, y, axs)): 
+        ax.imshow(img.permute(1,2,0))
+        box_classes = annotations['labels'] 
+        boxes = rescale_bboxes(annotations['boxes'], (224,224))
+        for box_class, bbox in zip(box_classes, boxes): 
+            if box_class != 3: 
                 xmin, ymin, xmax, ymax = bbox.detach().numpy()
-                ax.add_patch(
-                    Rectangle(
-                        (xmin, ymin),
-                        xmax - xmin,
-                        ymax - ymin,
-                        fill=False,
-                        linewidth=3,
-                    )
-                )
-                text = f"{CLASSES[box_class]}"
-                ax.text(
-                    xmin,
-                    ymin,
-                    text,
-                    fontsize=15,
-                    bbox=dict(facecolor="yellow", alpha=0.5),
-                )
+                print(xmin, ymin, xmax, ymax) 
+                ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, fill=False, color=(0.000, 0.447, 0.741), linewidth=3)) # type: ignore
+                text = f'{CLASSES[box_class]}'
+                ax.text(xmin, ymin, text, fontsize=15, bbox=dict(facecolor='yellow', alpha=0.5))
 
-    fig.tight_layout()
-    plt.show()
+    fig.tight_layout() 
+    plt.show()     
 
 
+# ==============================================================================================================
+
+# tteeetrain januari
+# import os
+# import sys
+# import torch
+# import numpy as np
+# from torch.utils.data import Dataset, DataLoader
+# from PIL import Image
+# import albumentations as A
+# from albumentations.pytorch import ToTensorV2
+# from colorama import Fore
+# from matplotlib import pyplot as plt
+
+# from utils.boxes import rescale_bboxes, stacker
+# from utils.setup import get_classes
+# from utils.logger import get_logger
+# from utils.rich_handlers import DataLoaderHandler
+# from matplotlib.patches import Rectangle
+
+
+# class DETRData(Dataset):
+#     def __init__(self, path, train=True):
+#         super().__init__()
+#         self.path = path
+#         self.labels_path = os.path.join(self.path, "labels")
+#         self.images_path = os.path.join(self.path, "images")
+#         self.train = train
+
+#         self.labels = [x for x in os.listdir(self.labels_path) if x.endswith(".txt")]
+
+#         # logger
+#         self.logger = get_logger("data_loader")
+#         self.data_handler = DataLoaderHandler()
+
+#         dataset_info = {
+#             "Dataset Path": self.path,
+#             "Mode": "Training" if train else "Testing",
+#             "Total Samples": len(self.labels),
+#             "Images Path": self.images_path,
+#             "Labels Path": self.labels_path,
+#         }
+#         self.data_handler.log_dataset_stats(dataset_info)
+
+#         transform_list = [
+#             "Resize to 500x500",
+#             "Random Crop 224x224 (training only)",
+#             "Final Resize to 224x224",
+#             "Horizontal Flip p=0.5 (training only)",
+#             "Color Jitter (training only)",
+#             "Normalize (ImageNet stats)",
+#             "Convert to Tensor",
+#         ]
+#         self.data_handler.log_transform_info(transform_list)
+
+#         train_transforms = [
+#             A.Resize(500, 500),
+#             A.RandomSizedBBoxSafeCrop(
+#                 height=224,
+#                 width=224,
+#                 erosion_rate=0.0,
+#                 p=1.0,
+#             ),
+#             A.Resize(224, 224),
+#             A.HorizontalFlip(p=0.5),
+
+#             A.OneOf(
+#                 [
+#                     A.ColorJitter(
+#                         brightness=0.1,
+#                         contrast=0.1,
+#                         saturation=0.15,
+#                         hue=0.5,
+#                         p=1.0,
+#                     ),
+
+#                     A.Compose([
+#                         A.HueSaturationValue(
+#                             hue_shift_limit=60,
+#                             sat_shift_limit=40,
+#                             val_shift_limit=15,
+#                             p=1.0,
+#                         ),
+#                         A.RandomBrightnessContrast(
+#                             brightness_limit=(-0.1, 0.25),
+#                             contrast_limit=(-0.1, 0.25),
+#                             p=1.0,
+#                         ),
+#                     ]),
+#                 ],
+#                 p=0.66,
+#             ),
+
+#             A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+#             ToTensorV2(),
+#         ]
+
+#         test_transforms = [
+#             A.Resize(500, 500),
+#             A.Resize(224, 224),
+#             A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+#             ToTensorV2(),
+#         ]
+
+#         self.transform = A.Compose(
+#             train_transforms if self.train else test_transforms,
+#             bbox_params=A.BboxParams(format="yolo", label_fields=["class_labels"]),
+#         )
+
+#         # --- Build image map (basename -> filename) ---
+#         self.image_map = {}
+#         for img in os.listdir(self.images_path):
+#             base = os.path.splitext(img)[0]
+#             self.image_map[base] = img
+
+#         # Debug mismatch
+#         label_bases = set(os.path.splitext(x)[0] for x in self.labels)
+#         image_bases = set(self.image_map.keys())
+#         missing = sorted(label_bases - image_bases)
+#         if len(missing) > 0:
+#             print(
+#                 Fore.YELLOW
+#                 + f"⚠️ {len(missing)} label tidak punya pasangan image. Contoh: {missing[:5]}"
+#                 + Fore.RESET
+#             )
+
+#     def safe_transform(self, image, bboxes, labels, max_attempts=50):
+#         for _ in range(max_attempts):
+#             try:
+#                 transformed = self.transform(
+#                     image=image, bboxes=bboxes, class_labels=labels
+#                 )
+#                 if len(transformed["bboxes"]) > 0:
+#                     return transformed
+#             except Exception:
+#                 continue
+
+#         return {"image": image, "bboxes": bboxes, "class_labels": labels}
+
+#     def __len__(self):
+#         return len(self.labels)
+
+#     def __getitem__(self, idx):
+#         label_name = os.path.splitext(self.labels[idx])[0]
+#         label_path = os.path.join(self.labels_path, self.labels[idx])
+
+#         # exact match
+#         if label_name not in self.image_map:
+#             # fallback: cari yang mirip (Roboflow kadang beda suffix)
+#             candidates = [k for k in self.image_map if k.startswith(label_name)]
+#             if len(candidates) == 0:
+#                 raise RuntimeError(f"Label tanpa image: {label_name}")
+#             label_name = candidates[0]
+
+#         image_path = os.path.normpath(
+#             os.path.join(self.images_path, self.image_map[label_name])
+#         )
+
+#         try:
+#             img = Image.open(image_path).convert("RGB")
+#         except Exception as e:
+#             raise RuntimeError(f"Gagal baca gambar: {image_path}\n{e}")
+
+#         with open(label_path, "r") as f:
+#             annotations = f.readlines()
+
+#         class_labels, bounding_boxes = [], []
+#         for ann in annotations:
+#             parts = ann.strip().split()
+#             if len(parts) == 5:
+#                 class_labels.append(int(parts[0]))
+#                 bounding_boxes.append([float(x) for x in parts[1:]])
+
+#         class_labels = np.array(class_labels)
+#         bounding_boxes = np.array(bounding_boxes)
+
+#         augmented = self.safe_transform(
+#             image=np.array(img),
+#             bboxes=bounding_boxes,
+#             labels=class_labels,
+#         )
+
+#         return augmented["image"], {
+#             "labels": torch.tensor(augmented["class_labels"], dtype=torch.long),
+#             "boxes": torch.tensor(
+#                 np.array(augmented["bboxes"]), dtype=torch.float32
+#             ),
+#         }
+
+
+# if __name__ == "__main__":
+#     # dataset = DETRData("data/lawas-test_ood", train=False)
+#     dataset = DETRData("data/asli/train", train=False)
+#     dataloader = DataLoader(
+#         dataset, collate_fn=stacker, batch_size=8, drop_last=True
+#     )
+
+#     X, y = next(iter(dataloader))
+#     print(Fore.LIGHTCYAN_EX + str(y) + Fore.RESET)
+
+#     CLASSES = get_classes()
+#     fig, ax = plt.subplots(2, 4)
+#     axs = ax.flatten()
+
+#     for img, annotations, ax in zip(X, y, axs):
+#         ax.imshow(img.permute(1, 2, 0))
+#         box_classes = annotations["labels"]
+#         boxes = rescale_bboxes(annotations["boxes"], (224, 224))
+
+#         for box_class, bbox in zip(box_classes, boxes):
+#             if box_class != 26:
+#                 xmin, ymin, xmax, ymax = bbox.detach().numpy()
+#                 ax.add_patch(
+#                     Rectangle(
+#                         (xmin, ymin),
+#                         xmax - xmin,
+#                         ymax - ymin,
+#                         fill=False,
+#                         linewidth=3,
+#                     )
+#                 )
+#                 text = f"{CLASSES[box_class]}"
+#                 ax.text(
+#                     xmin,
+#                     ymin,
+#                     text,
+#                     fontsize=15,
+#                     bbox=dict(facecolor="yellow", alpha=0.5),
+#                 )
+
+#     fig.tight_layout()
+#     plt.show()
+
+
+# ==============================================================================================================
+
+
+# DETRData: Dataset Custom untuk DETR (DEtection TRansformer)
+# Tujuan kode ini:
+# 1. Memuat dataset gambar dan label (bounding box + class) dari folder.
+# 2. Melakukan augmentasi data (resize, crop, flip, color jitter) saat training untuk 
+#    meningkatkan generalisasi model.
+# 3. Menormalkan gambar agar sesuai dengan input standar model pretrained.
+# 4. Menyediakan data dalam format tensor PyTorch siap pakai.
+# 5. Menyediakan collate function (stacker) untuk memproses batch data karena DETR 
+#    membutuhkan list of tensors daripada single stacked tensor.
+# 6. Memberikan debug info (shape, min/max pixel) untuk memantau transformasi.
+
+# import torch
+# import numpy as np
+# from torch.utils.data import DataLoader, Dataset
+# import os
+# from PIL import Image
+# import albumentations as A
+# from matplotlib import pyplot as plt
+
+# from utils.boxes import rescale_bboxes
+# from utils.setup import get_classes
+
+# GLOBAL_DEBUG_ID = 0
+
+# class DETRData(Dataset):
+#     def __init__(self, path, train=True):
+#         super().__init__()
+#         self.path = path
+#         self.labels_path = os.path.join(path, "labels")
+#         self.images_path = os.path.join(path, "images")
+
+#         self.labels = list(
+#             filter(lambda x: x.endswith(".txt"), os.listdir(self.labels_path))
+#         )
+
+#         self.train = train
+
+#     # =========================
+#     # AUGMENT
+#     # =========================
+#     def get_aug(self):
+#         return A.Compose(
+#             [
+#                 A.Resize(500, 500),
+#                 *([A.RandomCrop(224, 224, p=0.33)] if self.train else []),
+#                 A.Resize(224, 224),
+#                 *([A.HorizontalFlip(p=0.5)] if self.train else []),
+#                 *([A.ColorJitter(p=0.5)] if self.train else []),
+#                 A.Normalize(
+#                     mean=[0.485, 0.456, 0.406],
+#                     std=[0.229, 0.224, 0.225]),
+#                 A.ToTensorV2(),
+#             ],
+#             bbox_params=A.BboxParams(
+#                 format="yolo",
+#                 label_fields=["class_labels"],
+#                 min_visibility=0.3
+#             ),
+#         )
+
+#     # =========================
+#     # NORMALIZE
+#     # =========================
+#     def get_norm(self):
+#         return A.Compose(
+#             [
+#                 A.Normalize(
+#                     mean=[0.485, 0.456, 0.406],
+#                     std=[0.229, 0.224, 0.225],
+#                 ),
+#                 A.ToTensorV2(),
+#             ]
+#         )
+
+#     def __len__(self):
+#         return len(self.labels)
+
+#     def __getitem__(self, idx):
+#         global GLOBAL_DEBUG_ID
+#         GLOBAL_DEBUG_ID += 1
+#         debug_id = GLOBAL_DEBUG_ID
+
+#         label_path = os.path.join(self.labels_path, self.labels[idx])
+#         image_name = self.labels[idx].split(".")[0]
+#         image_path = os.path.join(self.images_path, image_name + ".jpg")
+
+#         # =========================
+#         # LOAD IMAGE
+#         # =========================
+#         img = Image.open(image_path).convert("RGB")
+#         img_np = np.array(img)
+
+#         print(f"\n[{debug_id}] === ORIGINAL IMAGE ===")
+#         print(f"shape: {img_np.shape}")
+#         print(f"min: {img_np.min()}, max: {img_np.max()}")
+
+#         # =========================
+#         # LOAD LABEL
+#         # =========================
+#         with open(label_path, "r") as f:
+#             lines = f.readlines()
+
+#         class_labels = []
+#         bboxes = []
+
+#         for l in lines:
+#             l = l.strip().split(" ")
+#             class_labels.append(int(l[0]))
+#             bboxes.append(list(map(float, l[1:])))
+
+#         class_labels = np.array(class_labels)
+#         bboxes = np.array(bboxes)
+
+#         # =========================
+#         # AUGMENT
+#         # =========================
+#         aug = self.get_aug()(
+#             image=img_np,
+#             bboxes=bboxes,
+#             class_labels=class_labels
+#         )
+
+#         # ❗ FIX UTAMA: jangan recursive call dataset
+#         if len(aug["bboxes"]) == 0:
+#             # retry SAFE LOOP (bukan re-call __getitem__)
+#             aug = self.get_aug()(
+#                 image=img_np,
+#                 bboxes=bboxes,
+#                 class_labels=class_labels
+#             )
+
+#         img_before = aug["image"]
+
+#         print(f"\n[{debug_id}] === BEFORE NORMALIZE ===")
+#         print(f"shape: {img_before.shape}")
+#         print(f"min: {img_before.min()}, max: {img_before.max()}")
+
+#         # =========================
+#         # NORMALIZE
+#         # =========================
+#         final = self.get_norm()(
+#             image=img_before,
+#             bboxes=aug["bboxes"],
+#             class_labels=aug["class_labels"]
+#         )
+
+#         img_tensor = final["image"]
+
+#         print(f"\n[{debug_id}] === AFTER NORMALIZE ===")
+#         print(f"shape: {img_tensor.shape}")
+#         print(f"min: {img_tensor.min():.3f}, max: {img_tensor.max():.3f}")
+
+#         return img_tensor, {
+#             "labels": torch.tensor(final["class_labels"], dtype=torch.long),
+#             "boxes": torch.tensor(final["bboxes"], dtype=torch.float32),
+#         }
+
+
+# # =========================
+# # SAFE COLLATE
+# # =========================
+# def stacker(batch):
+#     images = []
+#     targets = []
+
+#     for item in batch:
+#         images.append(item[0])
+#         targets.append(item[1])
+
+#     return images, targets
+
+
+# # =========================
+# # MAIN
+# # =========================
+# if __name__ == "__main__":
+#     dataset = DETRData("data/asli/train", train=True)
+
+#     dataloader = DataLoader(
+#         dataset,
+#         batch_size=4,
+#         collate_fn=stacker,
+#         drop_last=True
+#     )
+
+#     X, y = next(iter(dataloader))
+
+# ==============================================================================================================
+
+# ==== Kepanjangan ====
 # import torch
 # import numpy as np
 # from torch.utils.data import DataLoader, Dataset 

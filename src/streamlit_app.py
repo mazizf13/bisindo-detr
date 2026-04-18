@@ -1,6 +1,5 @@
 """
 🤟 BISINDO Alphabet Detection
-Modern & Interactive Streamlit Application
 """
 
 import streamlit as st
@@ -21,7 +20,7 @@ import json
 # Page Configuration
 # -------------------------
 st.set_page_config(
-    page_title="Deteksi Alfabet BISINDO",
+    page_title="BISINDO Alphabet Detection",
     page_icon="🤟",
     layout="wide",
     initial_sidebar_state="expanded"

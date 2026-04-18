@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     # Load model
     model = DETR(num_classes=26)
-    model.load_state_dict(torch.load("pretrained/warnet/gpu_black_noaug_300_model.pt", map_location=device))
+    model.load_state_dict(torch.load("pretrained/warnet2/.pt", map_location=device))
     model.to(device)
 
     # Dataset & dataloader
