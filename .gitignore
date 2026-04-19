@@ -6,6 +6,10 @@ dist/
 wheels/
 *.egg-info
 
+# For streamlit, using requirements.txt and package.txt, so comment uv.lock and pyproject.toml
+uv.lock
+pyproject.toml
+
 # Virtual environments
 .venv
 detrtest.py
