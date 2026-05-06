@@ -1,4 +1,4 @@
-# PART 2 ==========================================================================================
+# RT ==========================================================================================
 import os
 import sys
 
@@ -44,11 +44,7 @@ model.eval()
 
 try:
     # 2. LOAD PRETRAINED
-    # model.load_pretrained('pretrained/warnet/rabu/blacknoaug/300_model.pt', map_location=device)
-    # model.load_pretrained('pretrained/warnet2/noaug/300_model.pt', map_location=device)
     model.load_pretrained('pretrained/warnet2/aug/300_model.pt', map_location=device)
-    # model.load_pretrained('pretrained/warnet2/aug-new/300_model.pt', map_location=device)
-    # model.load_pretrained('pretrained/warnet/gpu_black_300_model.pt', map_location=device)
     try:
         logger.success("Model loaded successfully!")
     except:
@@ -90,7 +86,7 @@ try:
             
             # Preprocess
             transformed = transforms(image=frame)
-            # Pindah gambar ke GPU/CPU
+            #
             img_tensor = torch.unsqueeze(transformed['image'], dim=0).to(device)
             
             # Forward Pass
@@ -169,7 +165,7 @@ try:
                     )
 
             else:
-                # Tidak ada deteksi → dihitung sebagai dropout
+                # No detections above threshold -> dropout
                 dropout_frames += 1
 
             # LOGGING TERMINAL
@@ -178,22 +174,22 @@ try:
                 elapsed_time = time.time() - fps_start_time
                 fps_display = 30 / elapsed_time if elapsed_time > 0 else 0
                 
-                # 1. Log Tabel Deteksi
+                # 1. Log Detections (if any)
                 if current_detections:
                     try:
                         detection_handler.log_detections(current_detections, frame_id=frame_count)
                     except:
-                        pass # Skip kalau error encoding tabel
+                        pass # Skip logging detections if error occurs
 
                 # 2. Log Latency & FPS
                 try:
                     detection_handler.log_inference_time(inference_time, fps_display)
                 except:
-                    print(f"[FPS: {fps_display:.2f} | Latency: {inference_time:.2f}ms]") # Fallback manual
+                    print(f"[FPS: {fps_display:.2f} | Latency: {inference_time:.2f}ms]") # manual Fallback 
 
                 fps_start_time = time.time()
                 
-            # Display FPS & Device di Layar Kamera
+            # Display FPS & Device Info on Frame
             cv2.putText(frame, f"FPS: {fps_display:.1f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             cv2.putText(frame, f"Device: {device}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
@@ -209,7 +205,7 @@ try:
 except KeyboardInterrupt:
     print("\n[INFO] Interrupted by user (Ctrl+C). Exiting safely...")
 
-# Rata-rata Akhir 
+# End session
 total_session_time = time.time() - session_start_time
 final_avg_fps = frame_count / total_session_time if total_session_time > 0 else 0
 
@@ -220,14 +216,236 @@ cv2.destroyAllWindows()
 
 # Final Report 
 print("\n" + "="*40)
-print(f"✅ Session Ended Successfully")
-print(f"📊 Total Frames: {frame_count}")
-print(f"❌ Dropout Frames: {dropout_frames}")
-print(f"📉 Dropout Rate: {dropout_rate:.2f}%")
-print(f"⏱️ Total Duration: {total_session_time:.2f}s")
-print(f"🚀 FINAL AVERAGE FPS: {final_avg_fps:.2f}")
-print(f"💻 Hardware Used: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
+print(f"Session Ended Successfully")
+print(f"Total Frames: {frame_count}")
+print(f"Dropout Frames: {dropout_frames}")
+print(f"Dropout Rate: {dropout_rate:.2f}%")
+print(f"Total Duration: {total_session_time:.2f}s")
+print(f"FINAL AVERAGE FPS: {final_avg_fps:.2f}")
+print(f"Hardware Used: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
 print("="*40 + "\n")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # PAKAI YANG PART 2
 # PART 3 with ccalcualte fps and latency ==========================================================================================

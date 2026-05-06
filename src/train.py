@@ -19,10 +19,10 @@ if __name__ == '__main__':
     logger.print_banner()
     loss_logger = LossLogger()
     
-    train_dataset = DETRData('data/train') 
+    train_dataset = DETRData('data/lawas-train') 
     train_dataloader = DataLoader(train_dataset, batch_size=4, collate_fn=stacker, drop_last=True) 
 
-    test_dataset = DETRData('data/val', train=False) 
+    test_dataset = DETRData('data/lawas-val', train=False) 
     test_dataloader = DataLoader(test_dataset, batch_size=4, collate_fn=stacker, drop_last=True) 
 
     num_classes = 26
@@ -130,4 +130,4 @@ if __name__ == '__main__':
                     training_handler.save_checkpoint_status(checkpoint_path, epoch)
             
     # Final save
-    save(model.state_dict(), f"checkpoints/{epoch}_model.pt")
+    save(model.state_dict(), f"checkpoints/{epoch}_model.pt") # type: ignore

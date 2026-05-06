@@ -21,18 +21,15 @@ logger.print_banner()
 
 # Dataset & dataloader
 num_classes = 26
-# test_dataset = DETRData('data/lawas-test_ood', train=False)
-test_dataset = DETRData('data/asli/test', train=True)
+test_dataset = DETRData('data/asli/test', train=False)
 test_dataloader = DataLoader(test_dataset, shuffle=True, batch_size=4, drop_last=True) 
 
 # Load model
 model = DETR(num_classes=num_classes)
 model.eval()
-# model.load_pretrained('pretrained/warnet2/noaug/300_model.pt', map_location=device)
 model.load_pretrained('pretrained/warnet2/aug/300_model.pt', map_location=device)
-# model.load_pretrained('pretrained/warnet2/aug-new/300_model.pt', map_location=device)
 
-# Ambil 1 batch data
+# take 1 batch
 X, y = next(iter(test_dataloader))
 logger.test("Running inference on test batch...")
 
@@ -44,7 +41,7 @@ inference_time = (time.time() - start_time) * 1000  # ms
 # Softmax + threshold
 probabilities = result['pred_logits'].softmax(-1)[:, :, :-1] 
 max_probs, max_classes = probabilities.max(-1)
-keep_mask = max_probs > 0.5
+keep_mask = max_probs > 0.7
 batch_indices, query_indices = torch.where(keep_mask)
 
 # Scale boxes
@@ -115,6 +112,115 @@ for idx, (img, ax) in enumerate(zip(X, axs)):
 
 fig.tight_layout()
 plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ========== OLD TEST CODE ==========
 # from data import DETRData

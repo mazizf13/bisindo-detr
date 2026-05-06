@@ -13,9 +13,8 @@ from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 from model import DETR
 
-# MODEL_PATH = "pretrained/warnet2/noaug/300_model.pt"
-MODEL_PATH = "pretrained/warnet2/aug/300_model.pt"
-# MODEL_PATH = "pretrained/warnet2/aug-new/300_model.pt"
+MODEL_PATH = "pretrained/warnet2/noaug/300_model.pt"
+# MODEL_PATH = "pretrained/warnet2/aug/300_model.pt"
 
 GT_JSON_PATH = "data/asli/test/result.json"
 
@@ -86,10 +85,6 @@ def main():
             
             bboxes_scaled = outputs['pred_boxes'][0, keep]
             probas = probas[keep]
-
-            # F. Konversi Format Box (DETR -> COCO)
-            # DETR: (cx, cy, w, h) RELATIF (0-1)
-            # COCO: (x_min, y_min, w, h) ABSOLUT (Pixel)
             
             xc, yc, w, h = bboxes_scaled.unbind(-1)
             
@@ -133,12 +128,12 @@ def main():
     with contextlib.redirect_stdout(io.StringIO()):
         coco_eval.summarize()
 
-    # Ambil metric yang dibutuhkan
+    # Get metric
     ap = coco_eval.stats[0]
     ap50 = coco_eval.stats[1]
     ap75 = coco_eval.stats[2]
-    # ar1 = coco_eval.stats[6] #noaug
-    ar1 = coco_eval.stats[7] #aug
+    ar1 = coco_eval.stats[6] #noaug
+    # ar1 = coco_eval.stats[7] #aug
 
     print("\n=== HASIL EVALUASI PYCOCOTOOLS SKENARIO 1 TANPA AUGMENTASI ===")
     print(f"AP  @[IoU=0.50:0.95] : {ap:.3f}")
@@ -150,6 +145,100 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

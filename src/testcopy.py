@@ -243,11 +243,11 @@ if best_sample is not None:
     img = best_img
     result = best_result
 
-    probabilities = result["pred_logits"].softmax(-1)[0, :, :-1]
+    probabilities = result["pred_logits"].softmax(-1)[0, :, :-1] # type: ignore
     max_probs, max_classes = probabilities.max(-1)
     top_score, top_idx = max_probs.max(0)
 
-    pred_box = result["pred_boxes"][0, top_idx].unsqueeze(0)
+    pred_box = result["pred_boxes"][0, top_idx].unsqueeze(0) # type: ignore
     bbox = rescale_bboxes(pred_box, (224, 224))[0]
 
     pred_class = int(max_classes[top_idx])
@@ -257,7 +257,7 @@ if best_sample is not None:
     color = tuple(float(c) / 255 for c in COLORS[pred_class])
 
     fig, ax = plt.subplots(figsize=(5, 5))
-    ax.imshow(img.permute(1, 2, 0))
+    ax.imshow(img.permute(1, 2, 0)) # type: ignore
 
     ax.add_patch(
         Rectangle(

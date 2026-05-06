@@ -67,7 +67,7 @@ class HungarianMatcher(nn.Module):
             )  # [num_queries, num_targets]
             
             # Final cost matrix for this batch
-            C_batch = (self.bbox_weighting * cost_bbox + 
+            C_batch = (self.bbox_weighting * cost_bbox +  # type: ignore
                       self.class_weighting * cost_class + 
                       self.giou_weighting * cost_giou).cpu()
             
