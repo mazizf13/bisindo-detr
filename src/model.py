@@ -34,6 +34,7 @@ def build_2d_sincos_position_embedding(height: int, width: int, dim: int, device
     pos = torch.zeros(height, width, dim, device=device, dtype=torch.float32)
     pos[:, :, :dim_half] = pe_y[:, None, :].expand(-1, width, -1)
     pos[:, :, dim_half:] = pe_x[None, :, :].expand(height, -1, -1)
+    # Feature maps -> Flatten to (1, H*W, dim)
     pos = pos.view(1, height * width, dim)  # (1, H*W, dim)
     return pos
 
