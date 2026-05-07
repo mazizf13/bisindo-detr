@@ -168,39 +168,93 @@ try:
                 # No detections above threshold -> dropout
                 dropout_frames += 1
 
-            # LOGGING TERMINAL
+        
+            # LOGGING & FPS COUNTER
+            # =========================
+
+            LOG_INTERVAL = 30  # logging every 30 frames
+
             frame_count += 1
-            if frame_count % 30 == 0:
+
+            # Log every LOG_INTERVAL frames
+            if frame_count % LOG_INTERVAL == 0:
+
                 elapsed_time = time.time() - fps_start_time
-                fps_display = 30 / elapsed_time if elapsed_time > 0 else 0
-                
-                # 1. Log Detections (if any)
+
+                # Hindari division by zero
+                fps_display = (
+                    LOG_INTERVAL / elapsed_time
+                    if elapsed_time > 0 else 0
+                )
+
+                # =========================
+                # 1. Log Detection Results
+                # =========================
                 if current_detections:
                     try:
-                        detection_handler.log_detections(current_detections, frame_id=frame_count)
-                    except:
-                        pass # Skip logging detections if error occurs
+                        detection_handler.log_detections(
+                            current_detections,
+                            frame_id=frame_count
+                        )
+                    except Exception as e:
+                        print(f"[WARNING] Failed to log detections: {e}")
 
-                # 2. Log Latency & FPS
+                # =========================
+                # 2. Log FPS & Latency
+                # =========================
                 try:
-                    detection_handler.log_inference_time(inference_time, fps_display)
-                except:
-                    print(f"[FPS: {fps_display:.2f} | Latency: {inference_time:.2f}ms]") # manual Fallback 
+                    detection_handler.log_inference_time(
+                        inference_time,
+                        fps_display
+                    )
 
+                except Exception:
+                    print(
+                        f"[FPS: {fps_display:.2f} | "
+                        f"Latency: {inference_time:.2f} ms]"
+                    )
+
+                # Reset timer for next LOG_INTERVAL
                 fps_start_time = time.time()
-                
-            # Display FPS & Device Info on Frame
-            cv2.putText(frame, f"FPS: {fps_display:.1f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            cv2.putText(frame, f"Device: {device}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-            cv2.imshow('Sign Language Detection', frame)
+
+            # =========================
+            # DISPLAY INFO ON FRAME
+            # =========================
+
+            cv2.putText(
+                frame,
+                f"FPS: {fps_display:.1f}",
+                (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0),
+                2
+            )
+
+            cv2.putText(
+                frame,
+                f"Device: {device}",
+                (10, 60),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 255, 0),
+                2
+            )
+
+            cv2.imshow("Sign Language Detection", frame)
+
+
+            # =========================
+            # EXIT PROGRAM
+            # =========================
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                # kalao error emoji lagi, try-except
                 try:
                     logger.realtime("Stopping real-time detection...")
                 except:
                     pass
+
                 break
 except KeyboardInterrupt:
     print("\n[INFO] Interrupted by user (Ctrl+C). Exiting safely...")
