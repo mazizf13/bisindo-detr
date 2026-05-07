@@ -83,11 +83,12 @@ def main():
             probas = outputs['pred_logits'].softmax(-1)[0, :, :-1] 
             keep = probas.max(-1).values > CONFIDENCE_THRESHOLD
             
-            bboxes_scaled = outputs['pred_boxes'][0, keep]
+            bboxes_scaled = outputs['pred_boxes'][0, keep] # valid boxes in normalized format (xc, yc, w, h)
             probas = probas[keep]
             
-            xc, yc, w, h = bboxes_scaled.unbind(-1)
+            xc, yc, w, h = bboxes_scaled.unbind(-1) #split bbox
             
+            # convert from normalized (xc, yc, w, h) to COCO format (x_min, y_min, width, height) in original image scale
             b_x = (xc - 0.5 * w) * w_orig
             b_y = (yc - 0.5 * h) * h_orig
             b_w = w * w_orig
@@ -118,6 +119,7 @@ def main():
     
     print(f"✅ Prediksi selesai. Menjalankan COCOeval...")
     
+    # load prediction coco_dt
     coco_dt = coco_gt.loadRes(pred_json_path)
     
     # Run Eval
