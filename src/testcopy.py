@@ -178,7 +178,7 @@ test_dataset = DETRData("data/asli/test", train=False)
 # =========================
 # Model
 # =========================
-model = DETR(num_classes=26).to(device)
+model = DETR(num_classes=43).to(device)
 model.eval()
 
 model.load_pretrained(

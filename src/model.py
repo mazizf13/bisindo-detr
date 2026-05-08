@@ -138,5 +138,5 @@ class DETR(nn.Module):
             self.model_handler.log_model_loading(checkpoint_path, success=False)
     
 if __name__ == '__main__': 
-    model = DETR(num_classes=26)
+    model = DETR(num_classes=43)
     summary(model, (4,3,224,224))

@@ -20,8 +20,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 logger.print_banner()
 
 # Dataset & dataloader
-num_classes = 26
-test_dataset = DETRData('data/asli/test', train=False)
+num_classes = 43
+test_dataset = DETRData('data/mei/test', train=False)
 test_dataloader = DataLoader(test_dataset, shuffle=True, batch_size=4, drop_last=True) 
 
 # Load model

@@ -38,7 +38,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 logger.realtime(f"Running inference on: {device}") 
 
 # Load model
-model = DETR(num_classes=26)
+model = DETR(num_classes=43)
 model = model.to(device)
 model.eval()
 

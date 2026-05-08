@@ -19,13 +19,13 @@ if __name__ == '__main__':
     logger.print_banner()
     loss_logger = LossLogger()
     
-    train_dataset = DETRData('data/lawas-train') 
+    train_dataset = DETRData('data/mei/train', train=True) 
     train_dataloader = DataLoader(train_dataset, batch_size=4, collate_fn=stacker, drop_last=True) 
 
-    test_dataset = DETRData('data/lawas-val', train=False) 
+    test_dataset = DETRData('data/mei/val', train=False) 
     test_dataloader = DataLoader(test_dataset, batch_size=4, collate_fn=stacker, drop_last=True) 
 
-    num_classes = 26
+    num_classes = 43
     model = DETR(num_classes=num_classes)
     # model.load_pretrained('pretrained/240_final_model.pt')
     model.log_model_info()

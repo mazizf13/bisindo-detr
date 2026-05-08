@@ -2,7 +2,7 @@ import csv
 import os
 
 class LossLogger:
-    def __init__(self, log_file="logs/training_loss_log.csv"):
+    def __init__(self, log_file="logs/mei/scenario2/training_loss_log.csv"):
         self.log_file = log_file
         os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
         # Buat file baru dengan header kalau belum ada

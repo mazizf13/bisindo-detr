@@ -187,9 +187,9 @@ class DETRData(Dataset):
 
 if __name__ == "__main__":
     # dataset = DETRData("data/lawas-test_ood", train=False)
-    dataset = DETRData("data/asli/train", train=False)
+    dataset = DETRData("data/mei/train", train=False)
     dataloader = DataLoader(
-        dataset, collate_fn=stacker, batch_size=8, drop_last=True
+        dataset, collate_fn=stacker, batch_size=4, drop_last=True
     )
 
     X, y = next(iter(dataloader))
@@ -211,10 +211,10 @@ if __name__ == "__main__":
         for label in labels:
             label = int(label)
 
-            if label not in class_samples and label != 26:
+            if label not in class_samples and label !=43:
                 class_samples[label] = (img, ann)
 
-        if len(class_samples) == 26:
+        if len(class_samples) == 43:
             break
 
 
@@ -223,7 +223,7 @@ if __name__ == "__main__":
 
     for cls, (img, annotations) in class_samples.items():
 
-        fig, ax = plt.subplots(figsize=(4,4))
+        fig, ax = plt.subplots(figsize=(2,2))
 
         ax.imshow(img.permute(1,2,0))
 
@@ -269,6 +269,203 @@ if __name__ == "__main__":
         plt.show()
 
         plt.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # import torch

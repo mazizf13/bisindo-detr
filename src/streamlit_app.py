@@ -310,7 +310,7 @@ def load_lottie_local(filepath: str):
 @st.cache_resource
 def load_model():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = DETR(num_classes=26)
+    model = DETR(num_classes=43)
     model = model.to(device)
     model.eval()
     model.load_pretrained('model/300_model.pt', map_location=device)

@@ -16,11 +16,11 @@ from model import DETR
 MODEL_PATH = "pretrained/warnet2/noaug/300_model.pt"
 # MODEL_PATH = "pretrained/warnet2/aug/300_model.pt"
 
-GT_JSON_PATH = "data/asli/test/result.json"
+GT_JSON_PATH = "data/mei/test/result.json"
 
-IMAGE_ROOT = "data/asli/test/images"
+IMAGE_ROOT = "data/mei/test/images"
 
-NUM_CLASSES = 26
+NUM_CLASSES = 43
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 CONFIDENCE_THRESHOLD = 0.5
 
