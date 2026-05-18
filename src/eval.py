@@ -13,10 +13,10 @@ from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 from model import DETR
 
-MODEL_PATH = "pretrained/warnet2/noaug/300_model.pt"
+MODEL_PATH = "pretrained/mei/skenario2.pt"
 # MODEL_PATH = "pretrained/warnet2/aug/300_model.pt"
 
-GT_JSON_PATH = "data/mei/test/result.json"
+GT_JSON_PATH = "data/mei/testing/coco.json"
 
 IMAGE_ROOT = "data/mei/test/images"
 

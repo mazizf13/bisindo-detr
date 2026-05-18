@@ -21,13 +21,13 @@ logger.print_banner()
 
 # Dataset & dataloader
 num_classes = 43
-test_dataset = DETRData('data/mei/test', train=False)
+test_dataset = DETRData('data/mei/testing', train=False)
 test_dataloader = DataLoader(test_dataset, shuffle=True, batch_size=4, drop_last=True) 
 
 # Load model
 model = DETR(num_classes=num_classes)
 model.eval()
-model.load_pretrained('pretrained/warnet2/aug/300_model.pt', map_location=device)
+model.load_pretrained('pretrained/mei/skenario2.pt', map_location=device)
 
 # take 1 batch
 X, y = next(iter(test_dataloader))

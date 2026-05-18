@@ -313,7 +313,7 @@ def load_model():
     model = DETR(num_classes=43)
     model = model.to(device)
     model.eval()
-    model.load_pretrained('model/noaug/300_model.pt', map_location=device)
+    model.load_pretrained('model/mei/skenario1.pt', map_location=device)
     return model, device
 
 @st.cache_data

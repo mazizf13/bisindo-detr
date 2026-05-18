@@ -1,148 +1,350 @@
-# RT ==========================================================================================
 import os
 import sys
+import time
 
 os.environ["PYTHONIOENCODING"] = "utf-8"
+
 try:
-    sys.stdout.reconfigure(encoding='utf-8') # type: ignore
+    sys.stdout.reconfigure(encoding='utf-8')  # type: ignore
 except AttributeError:
     pass
 
 import cv2
 import torch
-import time
 import albumentations as A
+
 from model import DETR
 from utils.boxes import rescale_bboxes
 from utils.setup import get_classes, get_colors
 from utils.logger import get_logger
 from utils.rich_handlers import DetectionHandler
+
 from albumentations.pytorch import ToTensorV2
 
-# Logger
+
+# =========================================================
+# LOGGER
+# =========================================================
+
 logger = get_logger("realtime")
 detection_handler = DetectionHandler()
 
 logger.print_banner()
 logger.realtime("Initializing real-time sign language detection...")
 
-# Preprocessing pipeline
+
+# =========================================================
+# PREPROCESSING
+# =========================================================
+
 transforms = A.Compose([
     A.Resize(224, 224),
-    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+
+    A.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    ),
+
     ToTensorV2()
 ])
 
-# 1. AUTO DETECT DEVICE (GPU/CPU)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-logger.realtime(f"Running inference on: {device}") 
 
-# Load model
+# =========================================================
+# DEVICE
+# =========================================================
+
+device = torch.device(
+    'cuda' if torch.cuda.is_available() else 'cpu'
+)
+
+logger.realtime(
+    f"Running inference on: {device}"
+)
+
+
+# =========================================================
+# LOAD MODEL
+# =========================================================
+
 model = DETR(num_classes=43)
+
 model = model.to(device)
+
 model.eval()
 
 try:
-    # 2. LOAD PRETRAINED
-    model.load_pretrained('pretrained/warnet2/aug/300_model.pt', map_location=device)
-    try:
-        logger.success("Model loaded successfully!")
-    except:
-        print("[INFO] Model loaded successfully!")
+
+    model.load_pretrained(
+        'pretrained/mei/skenario2.pt',
+        map_location=device
+    )
+
+    logger.success(
+        "Model loaded successfully!"
+    )
+
 except Exception as e:
-    logger.error(f"Failed to load model: {e}")
+
+    logger.error(
+        f"Failed to load model: {e}"
+    )
+
     sys.exit(1)
+
+
+# =========================================================
+# CLASSES & COLORS
+# =========================================================
 
 CLASSES = get_classes()
+
 COLORS = get_colors()
 
-logger.realtime("Starting camera capture...")
+
+# =========================================================
+# CAMERA
+# =========================================================
+
+logger.realtime(
+    "Starting camera capture..."
+)
+
 cap = cv2.VideoCapture(0)
+
 if not cap.isOpened():
-    logger.error("Failed to open camera")
+
+    logger.error(
+        "Failed to open camera"
+    )
+
     sys.exit(1)
 
-# Initialize performance tracking
+
+# =========================================================
+# SAVE DIRECTORY
+# =========================================================
+
+SAVE_DIR = "best_captures/skenario2/normalziz"
+
+os.makedirs(
+    SAVE_DIR,
+    exist_ok=True
+)
+
+# Menyimpan confidence terbaik tiap class
+best_scores = {}
+
+
+# =========================================================
+# PERFORMANCE TRACKING
+# =========================================================
+
 frame_count = 0
+
 dropout_frames = 0
+
 fps_start_time = time.time()
+
 session_start_time = time.time()
+
 fps_display = 0.0
 
-# --- WRAP WITH TORCH.NO_GRAD() ---
+LOG_INTERVAL = 30
+
+
+# =========================================================
+# REALTIME LOOP
+# =========================================================
+
 try:
+
     with torch.no_grad():
+
         while cap.isOpened():
+
             ret, frame = cap.read()
+
             if not ret:
-                logger.error("Failed to read frame from camera")
+
+                logger.error(
+                    "Failed to read frame from camera"
+                )
+
                 break
 
-            # Mirror effect
+
+            # =================================================
+            # MIRROR EFFECT
+            # =================================================
+
             frame = cv2.flip(frame, 1)
 
-            # Inference Setup
-            inference_start = time.time()
-            
-            # Preprocess
-            transformed = transforms(image=frame)
-            #
-            img_tensor = torch.unsqueeze(transformed['image'], dim=0).to(device)
-            
-            # Forward Pass
-            result = model(img_tensor)
-            
-            inference_time = (time.time() - inference_start) * 1000  # ms
 
-            # --- POST PROCESSING (SAFE MODE) ---
-            probabilities = result['pred_logits'].softmax(-1)[0, :, :-1].detach().cpu()
+            # =================================================
+            # INFERENCE
+            # =================================================
+
+            inference_start = time.time()
+
+            transformed = transforms(
+                image=frame
+            )
+
+            img_tensor = torch.unsqueeze(
+                transformed['image'],
+                dim=0
+            ).to(device)
+
+            result = model(img_tensor)
+
+            inference_time = (
+                time.time() - inference_start
+            ) * 1000
+
+
+            # =================================================
+            # POST PROCESSING
+            # =================================================
+
+            probabilities = (
+                result['pred_logits']
+                .softmax(-1)[0, :, :-1]
+                .detach()
+                .cpu()
+            )
+
             max_probs, max_classes = probabilities.max(-1)
-            
-            # keep_mask = max_probs > 0.7
-            # query_indices = keep_mask.nonzero(as_tuple=True)[0]
-            top_score, top_idx = max_probs.max(0) 
-            
-            # 2. Set threshold
-            if top_score > 0.7:
+
+            top_score, top_idx = max_probs.max(0)
+
+
+            # =================================================
+            # THRESHOLD
+            # =================================================
+
+            if top_score > 0.75:
+
                 query_indices = top_idx.unsqueeze(0)
+
             else:
+
                 query_indices = []
 
-            # list detections untuk Logger & Drawing
+
             current_detections = []
 
+
+            # =================================================
+            # DETECTION PROCESS
+            # =================================================
+
             if len(query_indices) > 0:
-                # Ambil boxes
-                pred_boxes = result['pred_boxes'][0, query_indices].detach().cpu()
-                keep_classes = max_classes[query_indices].detach().cpu()
-                keep_probs = max_probs[query_indices].detach().cpu()
+
+                pred_boxes = (
+                    result['pred_boxes'][0, query_indices]
+                    .detach()
+                    .cpu()
+                )
+
+                keep_classes = (
+                    max_classes[query_indices]
+                    .detach()
+                    .cpu()
+                )
+
+                keep_probs = (
+                    max_probs[query_indices]
+                    .detach()
+                    .cpu()
+                )
 
                 height, width, _ = frame.shape
-                bboxes = rescale_bboxes(pred_boxes, (width, height))
 
-                for bclass, bprob, bbox in zip(keep_classes, keep_probs, bboxes):
+                bboxes = rescale_bboxes(
+                    pred_boxes,
+                    (width, height)
+                )
 
-                    bclass_idx = int(bclass.numpy())
-                    bprob_val = float(bprob.numpy())
-                    x1, y1, x2, y2 = map(int, bbox.numpy())
+
+                for bclass, bprob, bbox in zip(
+                    keep_classes,
+                    keep_probs,
+                    bboxes
+                ):
+
+                    bclass_idx = int(
+                        bclass.numpy()
+                    )
+
+                    bprob_val = float(
+                        bprob.numpy()
+                    )
+
+                    x1, y1, x2, y2 = map(
+                        int,
+                        bbox.numpy()
+                    )
+
+
+                    # =================================================
+                    # VALIDATION
+                    # =================================================
 
                     if bclass_idx >= len(CLASSES):
                         continue
 
+
+                    class_name = CLASSES[bclass_idx]
+
+
+                    # =================================================
+                    # STORE DETECTIONS
+                    # =================================================
+
                     current_detections.append({
-                        'class': CLASSES[bclass_idx],
+
+                        'class': class_name,
+
                         'confidence': bprob_val,
-                        'bbox': [x1, y1, x2, y2]
+
+                        'bbox': [
+                            x1,
+                            y1,
+                            x2,
+                            y2
+                        ]
                     })
 
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), COLORS[bclass_idx], 3) # type: ignore
 
-                    frame_text = f"{CLASSES[bclass_idx]} - {bprob_val:.2f}"
-                    (text_w, text_h), baseline = cv2.getTextSize(
-                        frame_text,
-                        cv2.FONT_HERSHEY_DUPLEX,
-                        1.2,
-                        2
+                    # =================================================
+                    # DRAW BBOX
+                    # =================================================
+
+                    cv2.rectangle(
+                        frame,
+                        (x1, y1),
+                        (x2, y2),
+                        COLORS[bclass_idx],
+                        3
+                    ) # type: ignore
+
+
+                    # =================================================
+                    # TEXT LABEL
+                    # =================================================
+
+                    frame_text = (
+                        f"{class_name} - "
+                        f"{bprob_val:.2f}"
+                    )
+
+                    (text_w, text_h), baseline = (
+                        cv2.getTextSize(
+                            frame_text,
+                            cv2.FONT_HERSHEY_DUPLEX,
+                            1.2,
+                            2
+                        )
                     )
 
                     cv2.rectangle(
@@ -164,63 +366,115 @@ try:
                         cv2.LINE_AA
                     )
 
+
+                    # =================================================
+                    # SAVE BEST IMAGE PER CLASS
+                    # =================================================
+
+                    previous_best = best_scores.get(
+                        class_name,
+                        0
+                    )
+
+                    if bprob_val > previous_best:
+
+                        best_scores[class_name] = bprob_val
+
+                        filename = (
+                            f"{class_name}.jpg"
+                        )
+
+                        save_path = os.path.join(
+                            SAVE_DIR,
+                            filename
+                        )
+
+                        # Copy full frame
+                        saved_frame = frame.copy()
+
+                        cv2.imwrite(
+                            save_path,
+                            saved_frame
+                        )
+
+                        print(
+                            f"[BEST IMAGE UPDATED] "
+                            f"{class_name} | "
+                            f"Confidence: "
+                            f"{bprob_val:.2f}"
+                        )
+
+
             else:
-                # No detections above threshold -> dropout
+
                 dropout_frames += 1
 
-        
-            # LOGGING & FPS COUNTER
-            # =========================
 
-            LOG_INTERVAL = 30  # logging every 30 frames
+            # =================================================
+            # FPS & LOGGING
+            # =================================================
 
             frame_count += 1
 
-            # Log every LOG_INTERVAL frames
             if frame_count % LOG_INTERVAL == 0:
 
-                elapsed_time = time.time() - fps_start_time
+                elapsed_time = (
+                    time.time() - fps_start_time
+                )
 
-                # Hindari division by zero
                 fps_display = (
                     LOG_INTERVAL / elapsed_time
                     if elapsed_time > 0 else 0
                 )
 
-                # =========================
-                # 1. Log Detection Results
-                # =========================
+
+                # =============================================
+                # DETECTION LOG
+                # =============================================
+
                 if current_detections:
+
                     try:
+
                         detection_handler.log_detections(
                             current_detections,
                             frame_id=frame_count
                         )
-                    except Exception as e:
-                        print(f"[WARNING] Failed to log detections: {e}")
 
-                # =========================
-                # 2. Log FPS & Latency
-                # =========================
+                    except Exception as e:
+
+                        print(
+                            f"[WARNING] "
+                            f"Failed to log detections: "
+                            f"{e}"
+                        )
+
+
+                # =============================================
+                # FPS LOG
+                # =============================================
+
                 try:
+
                     detection_handler.log_inference_time(
                         inference_time,
                         fps_display
                     )
 
                 except Exception:
+
                     print(
-                        f"[FPS: {fps_display:.2f} | "
-                        f"Latency: {inference_time:.2f} ms]"
+                        f"[FPS: {fps_display:.2f}] "
+                        f"[Latency: "
+                        f"{inference_time:.2f} ms]"
                     )
 
-                # Reset timer for next LOG_INTERVAL
                 fps_start_time = time.time()
 
 
-            # =========================
-            # DISPLAY INFO ON FRAME
-            # =========================
+            # =================================================
+            # DISPLAY FPS
+            # =================================================
 
             cv2.putText(
                 frame,
@@ -232,6 +486,11 @@ try:
                 2
             )
 
+
+            # =================================================
+            # DISPLAY DEVICE
+            # =================================================
+
             cv2.putText(
                 frame,
                 f"Device: {device}",
@@ -242,42 +501,371 @@ try:
                 2
             )
 
-            cv2.imshow("Sign Language Detection", frame)
+
+            # =================================================
+            # SHOW FRAME
+            # =================================================
+
+            cv2.imshow(
+                "Sign Language Detection",
+                frame
+            )
 
 
-            # =========================
+            # =================================================
             # EXIT PROGRAM
-            # =========================
+            # =================================================
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                try:
-                    logger.realtime("Stopping real-time detection...")
-                except:
-                    pass
+
+                logger.realtime(
+                    "Stopping real-time detection..."
+                )
 
                 break
+
+
 except KeyboardInterrupt:
-    print("\n[INFO] Interrupted by user (Ctrl+C). Exiting safely...")
 
-# End session
-total_session_time = time.time() - session_start_time
-final_avg_fps = frame_count / total_session_time if total_session_time > 0 else 0
+    print(
+        "\n[INFO] Interrupted by user "
+        "(Ctrl+C). Exiting safely..."
+    )
 
-dropout_rate = (dropout_frames / frame_count) * 100 if frame_count > 0 else 0
+
+# =========================================================
+# FINAL REPORT
+# =========================================================
+
+total_session_time = (
+    time.time() - session_start_time
+)
+
+final_avg_fps = (
+    frame_count / total_session_time
+    if total_session_time > 0 else 0
+)
+
+dropout_rate = (
+    (dropout_frames / frame_count) * 100
+    if frame_count > 0 else 0
+)
 
 cap.release()
+
 cv2.destroyAllWindows()
 
-# Final Report 
-print("\n" + "="*40)
-print(f"Session Ended Successfully")
+
+print("\n" + "=" * 40)
+
+print("Session Ended Successfully")
+
 print(f"Total Frames: {frame_count}")
+
 print(f"Dropout Frames: {dropout_frames}")
-print(f"Dropout Rate: {dropout_rate:.2f}%")
-print(f"Total Duration: {total_session_time:.2f}s")
-print(f"FINAL AVERAGE FPS: {final_avg_fps:.2f}")
-print(f"Hardware Used: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
-print("="*40 + "\n")
+
+print(
+    f"Dropout Rate: "
+    f"{dropout_rate:.2f}%"
+)
+
+print(
+    f"Total Duration: "
+    f"{total_session_time:.2f}s"
+)
+
+print(
+    f"FINAL AVERAGE FPS: "
+    f"{final_avg_fps:.2f}"
+)
+
+print(
+    f"Hardware Used: "
+    f"{torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}"
+)
+
+print("=" * 40 + "\n")
+
+# # RT ==========================================================================================
+# import os
+# import sys
+
+# os.environ["PYTHONIOENCODING"] = "utf-8"
+# try:
+#     sys.stdout.reconfigure(encoding='utf-8') # type: ignore
+# except AttributeError:
+#     pass
+
+# import cv2
+# import torch
+# import time
+# import albumentations as A
+# from model import DETR
+# from utils.boxes import rescale_bboxes
+# from utils.setup import get_classes, get_colors
+# from utils.logger import get_logger
+# from utils.rich_handlers import DetectionHandler
+# from albumentations.pytorch import ToTensorV2
+
+# # Logger
+# logger = get_logger("realtime")
+# detection_handler = DetectionHandler()
+
+# logger.print_banner()
+# logger.realtime("Initializing real-time sign language detection...")
+
+# # Preprocessing pipeline
+# transforms = A.Compose([
+#     A.Resize(224, 224),
+#     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+#     ToTensorV2()
+# ])
+
+# # 1. AUTO DETECT DEVICE (GPU/CPU)
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# logger.realtime(f"Running inference on: {device}") 
+
+# # Load model
+# model = DETR(num_classes=43)
+# model = model.to(device)
+# model.eval()
+
+# try:
+#     # 2. LOAD PRETRAINED
+#     model.load_pretrained('pretrained/mei/skenario2.pt', map_location=device)
+#     try:
+#         logger.success("Model loaded successfully!")
+#     except:
+#         print("[INFO] Model loaded successfully!")
+# except Exception as e:
+#     logger.error(f"Failed to load model: {e}")
+#     sys.exit(1)
+
+# CLASSES = get_classes()
+# COLORS = get_colors()
+
+# logger.realtime("Starting camera capture...")
+# cap = cv2.VideoCapture(0)
+# if not cap.isOpened():
+#     logger.error("Failed to open camera")
+#     sys.exit(1)
+
+# # Initialize performance tracking
+# frame_count = 0
+# dropout_frames = 0
+# fps_start_time = time.time()
+# session_start_time = time.time()
+# fps_display = 0.0
+
+# # --- WRAP WITH TORCH.NO_GRAD() ---
+# try:
+#     with torch.no_grad():
+#         while cap.isOpened():
+#             ret, frame = cap.read()
+#             if not ret:
+#                 logger.error("Failed to read frame from camera")
+#                 break
+
+#             # Mirror effect
+#             frame = cv2.flip(frame, 1)
+
+#             # Inference Setup
+#             inference_start = time.time()
+            
+#             # Preprocess
+#             transformed = transforms(image=frame)
+#             #
+#             img_tensor = torch.unsqueeze(transformed['image'], dim=0).to(device)
+            
+#             # Forward Pass
+#             result = model(img_tensor)
+            
+#             inference_time = (time.time() - inference_start) * 1000  # ms
+
+#             # --- POST PROCESSING (SAFE MODE) ---
+#             probabilities = result['pred_logits'].softmax(-1)[0, :, :-1].detach().cpu()
+#             max_probs, max_classes = probabilities.max(-1)
+            
+#             # keep_mask = max_probs > 0.7
+#             # query_indices = keep_mask.nonzero(as_tuple=True)[0]
+#             top_score, top_idx = max_probs.max(0) 
+            
+#             # 2. Set threshold
+#             if top_score > 0.75:
+#                 query_indices = top_idx.unsqueeze(0)
+#             else:
+#                 query_indices = []
+
+#             # list detections untuk Logger & Drawing
+#             current_detections = []
+
+#             if len(query_indices) > 0:
+#                 # Ambil boxes
+#                 pred_boxes = result['pred_boxes'][0, query_indices].detach().cpu()
+#                 keep_classes = max_classes[query_indices].detach().cpu()
+#                 keep_probs = max_probs[query_indices].detach().cpu()
+
+#                 height, width, _ = frame.shape
+#                 bboxes = rescale_bboxes(pred_boxes, (width, height))
+
+#                 for bclass, bprob, bbox in zip(keep_classes, keep_probs, bboxes):
+
+#                     bclass_idx = int(bclass.numpy())
+#                     bprob_val = float(bprob.numpy())
+#                     x1, y1, x2, y2 = map(int, bbox.numpy())
+
+#                     if bclass_idx >= len(CLASSES):
+#                         continue
+
+#                     current_detections.append({
+#                         'class': CLASSES[bclass_idx],
+#                         'confidence': bprob_val,
+#                         'bbox': [x1, y1, x2, y2]
+#                     })
+
+#                     cv2.rectangle(frame, (x1, y1), (x2, y2), COLORS[bclass_idx], 3) # type: ignore
+
+#                     frame_text = f"{CLASSES[bclass_idx]} - {bprob_val:.2f}"
+#                     (text_w, text_h), baseline = cv2.getTextSize(
+#                         frame_text,
+#                         cv2.FONT_HERSHEY_DUPLEX,
+#                         1.2,
+#                         2
+#                     )
+
+#                     cv2.rectangle(
+#                         frame,
+#                         (x1, y1 - text_h - 10),
+#                         (x1 + text_w + 10, y1),
+#                         COLORS[bclass_idx],
+#                         -1
+#                     ) # type: ignore
+
+#                     cv2.putText(
+#                         frame,
+#                         frame_text,
+#                         (x1 + 5, y1 - 5),
+#                         cv2.FONT_HERSHEY_DUPLEX,
+#                         1.2,
+#                         (255, 255, 255),
+#                         2,
+#                         cv2.LINE_AA
+#                     )
+
+#             else:
+#                 # No detections above threshold -> dropout
+#                 dropout_frames += 1
+
+        
+#             # LOGGING & FPS COUNTER
+#             # =========================
+
+#             LOG_INTERVAL = 30  # logging every 30 frames
+
+#             frame_count += 1
+
+#             # Log every LOG_INTERVAL frames
+#             if frame_count % LOG_INTERVAL == 0:
+
+#                 elapsed_time = time.time() - fps_start_time
+
+#                 # Hindari division by zero
+#                 fps_display = (
+#                     LOG_INTERVAL / elapsed_time
+#                     if elapsed_time > 0 else 0
+#                 )
+
+#                 # =========================
+#                 # 1. Log Detection Results
+#                 # =========================
+#                 if current_detections:
+#                     try:
+#                         detection_handler.log_detections(
+#                             current_detections,
+#                             frame_id=frame_count
+#                         )
+#                     except Exception as e:
+#                         print(f"[WARNING] Failed to log detections: {e}")
+
+#                 # =========================
+#                 # 2. Log FPS & Latency
+#                 # =========================
+#                 try:
+#                     detection_handler.log_inference_time(
+#                         inference_time,
+#                         fps_display
+#                     )
+
+#                 except Exception:
+#                     print(
+#                         f"[FPS: {fps_display:.2f} | "
+#                         f"Latency: {inference_time:.2f} ms]"
+#                     )
+
+#                 # Reset timer for next LOG_INTERVAL
+#                 fps_start_time = time.time()
+
+
+#             # =========================
+#             # DISPLAY INFO ON FRAME
+#             # =========================
+
+#             cv2.putText(
+#                 frame,
+#                 f"FPS: {fps_display:.1f}",
+#                 (10, 30),
+#                 cv2.FONT_HERSHEY_SIMPLEX,
+#                 1,
+#                 (0, 255, 0),
+#                 2
+#             )
+
+#             cv2.putText(
+#                 frame,
+#                 f"Device: {device}",
+#                 (10, 60),
+#                 cv2.FONT_HERSHEY_SIMPLEX,
+#                 0.6,
+#                 (0, 255, 0),
+#                 2
+#             )
+
+#             cv2.imshow("Sign Language Detection", frame)
+
+
+#             # =========================
+#             # EXIT PROGRAM
+#             # =========================
+
+#             if cv2.waitKey(1) & 0xFF == ord('q'):
+#                 try:
+#                     logger.realtime("Stopping real-time detection...")
+#                 except:
+#                     pass
+
+#                 break
+# except KeyboardInterrupt:
+#     print("\n[INFO] Interrupted by user (Ctrl+C). Exiting safely...")
+
+# # End session
+# total_session_time = time.time() - session_start_time
+# final_avg_fps = frame_count / total_session_time if total_session_time > 0 else 0
+
+# dropout_rate = (dropout_frames / frame_count) * 100 if frame_count > 0 else 0
+
+# cap.release()
+# cv2.destroyAllWindows()
+
+# # Final Report 
+# print("\n" + "="*40)
+# print(f"Session Ended Successfully")
+# print(f"Total Frames: {frame_count}")
+# print(f"Dropout Frames: {dropout_frames}")
+# print(f"Dropout Rate: {dropout_rate:.2f}%")
+# print(f"Total Duration: {total_session_time:.2f}s")
+# print(f"FINAL AVERAGE FPS: {final_avg_fps:.2f}")
+# print(f"Hardware Used: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
+# print("="*40 + "\n")
 
 
 

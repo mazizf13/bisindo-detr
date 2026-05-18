@@ -11,12 +11,12 @@ from utils.setup import get_classes, get_colors
 # =========================
 # Load dataset
 # =========================
-dataset = DETRData("data/asli/train", train=False)
+dataset = DETRData("data/mei/train", train=False)
 
 CLASSES = get_classes()
 COLORS = get_colors()
 
-save_dir = "dataset_bbox_visualization"
+save_dir = "dataset_bbox_visualization/mei"
 os.makedirs(save_dir, exist_ok=True)
 
 # =========================
@@ -31,10 +31,10 @@ for img, ann in dataset:
     for label in labels:
         label = int(label)
 
-        if label not in class_samples and label != 26:
+        if label not in class_samples and label != 43:
             class_samples[label] = (img, ann)
 
-    if len(class_samples) == 26:
+    if len(class_samples) == 43:
         break
 
 # urutkan A-Z
@@ -71,7 +71,7 @@ for cls, (img, annotations) in class_samples.items():
 
         class_idx = int(label)
 
-        color = tuple(c/255 for c in COLORS[class_idx])
+        color = tuple(c/255 for c in COLORS[class_idx]) # type: ignore
 
         rect = Rectangle(
             (xmin, ymin),
@@ -102,4 +102,4 @@ for cls, (img, annotations) in class_samples.items():
 
     plt.close()
 
-print(f"\n✅ 26 dataset bbox images saved to: {save_dir}")
+print(f"\n✅ 43 dataset bbox images saved to: {save_dir}")

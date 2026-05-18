@@ -19,6 +19,7 @@ data/archive
 .vscode
 data
 checkpoints
+best_captures
 img
 logs
 predict
@@ -43,4 +44,5 @@ asli-SignDETR.zip
 Evalcopy.ipynb
 Eval.ipynb
 SignDETR.zip
+SignDETRjanuari.zip
 lawas-SignDETR.zip

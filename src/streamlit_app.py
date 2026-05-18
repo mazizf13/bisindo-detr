@@ -20,7 +20,7 @@ import json
 # Page Configuration
 # -------------------------
 st.set_page_config(
-    page_title="BISINDO Alphabet Detection",
+    page_title="BISINDO Detection",
     page_icon="🤟",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -313,7 +313,7 @@ def load_model():
     model = DETR(num_classes=43)
     model = model.to(device)
     model.eval()
-    model.load_pretrained('model/300_model.pt', map_location=device)
+    model.load_pretrained('model/mei/skenario2.pt', map_location=device)
     return model, device
 
 @st.cache_data
@@ -420,7 +420,7 @@ def main():
         unsafe_allow_html=True
     )
     st.markdown(
-        '<p class="hero-quote">"Menjembatani Sunyi dengan Teknologi – Komunikasi Tanpa Batas"</p>',
+        '<p class="hero-quote">"Menjembatani Sunyi dengan Teknologi"</p>',
         unsafe_allow_html=True
     )
     
@@ -440,7 +440,7 @@ def main():
         <div class="info-card">
             <h3>🎯 Fitur Utama</h3>
             <ul>
-                <li>Deteksi 26 alfabet BISINDO</li>
+                <li>Deteksi 26 alfabet + 17 kata BISINDO</li>
                 <li>Confidence score</li>
                 <li>UI modern & interaktif</li>
             </ul>
@@ -475,7 +475,7 @@ def main():
     st.markdown("<br>", unsafe_allow_html=True)
     
     # Main Content Area
-    st.markdown("### 📸 Deteksi Alfabet BISINDO")
+    st.markdown("### 📸 Deteksi Alfabet dan Kata BISINDO")
     
     # Tab Interface
     tab1, tab2 = st.tabs(["📷 Kamera", "🖼️ Upload Gambar"])
